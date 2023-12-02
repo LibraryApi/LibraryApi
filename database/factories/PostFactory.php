@@ -17,8 +17,12 @@ class PostFactory extends Factory
     public function definition(): array
     {
         return [
-            "user_id"=> rand(1,9),
-            'book_id' => rand(1,9),
+            'book_id' => function () {
+                return \App\Models\Book::factory()->create()->id;
+            },
+            'user_id' => function () {
+                return \App\Models\User::factory()->create()->id;
+            },
             "title" => $this->faker->sentence(6), // Заголовок поста
             "content" => $this->faker->paragraph(8) // Содержание поста
         ];

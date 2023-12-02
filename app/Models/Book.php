@@ -10,4 +10,9 @@ class Book extends Model
     use HasFactory;
 
     protected $fillable = ['title', 'author', 'description'];
+
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
 }

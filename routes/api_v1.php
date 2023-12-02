@@ -41,6 +41,11 @@ Route::prefix('/books')->group(function () {
 });
 
 Route::prefix('/posts')->group(function () {
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::post('/', [PostController::class, 'store']);
+        Route::patch('/{id}', [PostController::class, 'update']);
+        Route::delete('/{id}', [PostController::class, 'destroy']);
+    });
     Route::get('/', [PostController::class, 'index']);
     Route::get('/{id}', [PostController::class, 'show']);
 });
