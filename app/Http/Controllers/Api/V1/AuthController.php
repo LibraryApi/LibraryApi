@@ -81,7 +81,7 @@ class AuthController extends Controller
     }
 
     /* Возвращает JSON-ответ с данными аутентифицированного пользователя. */
-    public function user()
+    public function getUser()
     {
         return response()->json(auth()->user());
     }

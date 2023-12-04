@@ -14,7 +14,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 Route::prefix('auth')->group(function () {
     Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::post('/logout', [AuthController::class, 'logout']);
-        Route::post('/user', [AuthController::class, 'user']);
+        Route::get('/user', [AuthController::class, 'getUser']);
         Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
     });
 
@@ -30,6 +30,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get('/users', [UserController::class, 'index']);
     Route::get('/users/{id}', [UserController::class, 'show']);
+    Route::patch('/users/{id}', [UserController::class, 'update']);
+    Route::delete('/users/{id}', [UserController::class, 'destroy']);
 });
 
 Route::prefix('/books')->group(function () {
