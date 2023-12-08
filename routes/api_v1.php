@@ -27,19 +27,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/comments', [CommentController::class, 'index']);
     Route::get('/comments/{id}', [CommentController::class, 'show']);
 
-
     Route::get('/users', [UserController::class, 'index']);
     Route::get('/users/{id}', [UserController::class, 'show']);
     Route::patch('/users/{id}', [UserController::class, 'update']);
     Route::delete('/users/{id}', [UserController::class, 'destroy']);
-});
-
-Route::prefix('/books')->group(function () {
-    Route::get('/', [BookController::class, 'index']);
-    Route::get('/{id}', [BookController::class, 'show']);
-    Route::post('/', [BookController::class, 'store']);
-    Route::patch('/{id}', [BookController::class, 'update']);
-    Route::delete('/{id}', [BookController::class, 'destroy']);
 });
 
 Route::prefix('/posts')->group(function () {
@@ -50,4 +41,15 @@ Route::prefix('/posts')->group(function () {
     });
     Route::get('/', [PostController::class, 'index']);
     Route::get('/{id}', [PostController::class, 'show']);
+});
+
+Route::prefix('/books')->group(function () {
+    Route::group(['middleware' => 'auth:sanctum'], function () {
+        Route::post('/', [BookController::class, 'store']);
+        Route::patch('/{id}', [BookController::class, 'update']);
+        Route::delete('/{id}', [BookController::class, 'destroy']);
+    });
+    
+    Route::get('/', [BookController::class, 'index']);
+    Route::get('/{id}', [BookController::class, 'show']);
 });

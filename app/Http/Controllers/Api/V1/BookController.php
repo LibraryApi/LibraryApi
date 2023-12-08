@@ -7,8 +7,6 @@ use App\Http\Requests\StoreBookRequest;
 use App\Http\Requests\UpdateBookRequest;
 use App\Http\Resources\BookResource;
 use App\Models\Book;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class BookController extends Controller
 {
@@ -24,16 +22,18 @@ class BookController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreBookRequest $request)
     {
-        $bookStoreRequest = new StoreBookRequest();
-        $validator = Validator::make($request->all(), $bookStoreRequest->rules(), $bookStoreRequest->messages());
+        $request->validated();
+        $book = new Book([
+            'title' => $request->input('title'),
+            'author' => $request->input('author'),
+            'description' => $request->input('description'),
+            'user_id' => auth()->user()->id,
+        ]);
 
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 422);
-        }
-
-        $book = Book::create($request->all());
+        $this->authorize('create', $book);
+        $book->save();
         $book = new BookResource($book);
         return response()->json($book, 201);
     }
@@ -50,21 +50,17 @@ class BookController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(UpdateBookRequest $request, $id)
     {
-        $bookUpdateRequest = new UpdateBookRequest();
-        $validator = Validator::make($request->all(), $bookUpdateRequest->rules(), $bookUpdateRequest->messages());
 
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 422);
-        }
-
+        $request->validated();
+        
         $book = Book::find($id);
 
         if (!$book) {
             return response()->json(['error' => 'Book not found'], 404);
         }
-
+        $this->authorize('update', $book);
         $book->update($request->all());
         $book = new BookResource($book);
 
@@ -83,6 +79,7 @@ class BookController extends Controller
             return response()->json(['error' => 'Book not found'], 404);
         }
 
+        $this->authorize('delete', $book);
         $book->delete();
 
         return response()->json(['message' => 'Book deleted successfully'], 200);

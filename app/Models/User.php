@@ -7,10 +7,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
+
+    public const ROLE_GUEST = 'guest';
+    public const ROLE_READER = 'reader';
+    public const ROLE_AUTHOR = 'author';
+    public const ROLE_ADMIN = 'admin';
 
     /**
      * The attributes that are mass assignable.
@@ -52,4 +58,13 @@ class User extends Authenticatable
     {
         return $this->hasMany(Comment::class);
     }
+
+    public function books()
+    {
+        return $this->hasMany(Book::class);
+    }
+    /* public function hasRole(string $role)
+    {
+        return $this->roles->contains('name', $role);
+    } */
 }
