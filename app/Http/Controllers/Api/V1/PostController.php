@@ -8,11 +8,10 @@ use App\Http\Requests\Post\UpdatePostRequest;
 use App\Http\Resources\PostResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
 use App\Models\Post;
 use App\Models\Book;
 use App\Models\User;
-
-use Illuminate\Support\Facades\DB;
 
 
 class PostController extends Controller
@@ -44,16 +43,18 @@ class PostController extends Controller
             }
         }
 
+        $this->authorize('create', $post);
         $user->posts()->save($post);
 
         return new PostResource($post);
     }
 
     public function show(string $id)
-    {
+    {    
+        $post = Post::with('user')->find($id);
 
-        $post = new PostResource(Post::with('user')->find($id));
-        return response()->json($post);
+        $postResource = new PostResource($post);
+        return response()->json($postResource);
     }
 
     public function update(UpdatePostRequest $request, $id)
@@ -73,9 +74,8 @@ class PostController extends Controller
             }
         }
 
-        if ($user->id !== $post->user_id) {
-            return response()->json(['error' => 'У пользователя нет прав на изменение'], 401);
-        }
+
+        $this->authorize('update', $post);
 
         $post->update([
             'title' => $request->input('title'),
@@ -88,17 +88,12 @@ class PostController extends Controller
 
     public function destroy($id)
     {
-        $user = auth()->user();
         $post = Post::find($id);
 
         if (!$post) {
             return response()->json(['error' => 'Пост не найден'], 404);
         }
-
-        if ($user->id !== $post->user_id) {
-            return response()->json(['error' => 'У пользователя нет прав на удаление'], 401);
-        }
-
+        $this->authorize('delete', $post);
         $post->delete();
 
         return response()->json(['message' => 'Пост успешно удален']);

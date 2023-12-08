@@ -7,9 +7,19 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Spatie\Permission\Models\Role;
+use App\Services\RoleService;
 
 class AuthController extends Controller
 {
+    
+    protected $roleService;
+
+    public function __construct(RoleService $roleService)
+    {
+        $this->roleService = $roleService;
+    }
+    
     /* Принимает токен и форматирует JSON-ответ с данными о токене.
     Включает токен, тип токена, и время его истечения.
     Используется для обработки ответов в методах login и refreshToken. */
@@ -29,13 +39,13 @@ class AuthController extends Controller
         // Обработка случая, если пользователь не найден
         return response()->json(['error' => 'User not found'], 404);
     }
-    
+
     public function register(Request $request)
     {
         $request->validate([
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:5',
+            'password' => 'required|string|min:4',
         ]);
 
         $user = User::create([
@@ -43,6 +53,8 @@ class AuthController extends Controller
             'email' => $request->input('email'),
             'password' => Hash::make($request->input('password')),
         ]);
+
+        $this->roleService->assignRoleToUser($user, USER::ROLE_READER);
 
         $token = $user->createToken('auth_token')->plainTextToken;
         $success = ["user" => $user->name, "token" => $token];
@@ -112,7 +124,7 @@ class AuthController extends Controller
             // Удаление всех токенов пользователя
             $user->tokens()->delete();
 
-            return response()->json(['message' => 'Successfully logged out']);
+            return response()->json(['message' => 'Successfully logged out'], 403);
         }
 
         // Если пользователь не найден, вернуть ошибку

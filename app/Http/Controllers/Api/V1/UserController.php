@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\User;
-use App\Http\Resources\User\Resource;
+use App\Http\Requests\User\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Hash;
-use App\Http\Requests\User\UpdateUserRequest;
+use Spatie\Permission\Models\Role;
+use App\Models\User;
+use App\Models\Comment;
+use App\Models\Post;
 
 class UserController extends Controller
 {
@@ -27,8 +28,11 @@ class UserController extends Controller
      */
     public function show(string $id)
     {
-        $user = new UserResource(User::with('posts')->findOrFail($id));
-        return response()->json($user);
+        $user = User::with('posts')->findOrFail($id);
+        $this->authorize('view', $user);
+
+        $userResource = new UserResource($user);
+        return response()->json($userResource);
     }
 
 
@@ -39,6 +43,8 @@ class UserController extends Controller
         if (!$user) {
             return response()->json(['error' => 'User not found'], 404);
         }
+
+        $this->authorize('update', $user);
 
         $user->update([
             'name' => $request->input('name'),
@@ -60,8 +66,12 @@ class UserController extends Controller
             return response()->json(['error' => 'User not found'], 404);
         }
 
+        $this->authorize('delete', $user);
+
+        Comment::where('user_id', $id)->delete();
+        Post::where('user_id', $id)->delete();
         $user->delete();
 
-        return response()->json(['message' => 'User deleted successfully']);
+        return response()->json(['message' => 'User deleted successfully'], 204);
     }
 }

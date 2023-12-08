@@ -18,7 +18,12 @@ class BookFactory extends Factory
     {
         return [
             "title" =>$this->faker->sentence(5), // Название книги
-            "author" => $this->faker->name, // Имя автора
+            "author" => $this->faker->name,
+            
+            'user_id' => function () {
+                return \App\Models\User::factory()->create()->id;
+            }, // Имя автора
+            
             "description" => $this->faker->paragraph(4) // Описание книги
 
         ];
