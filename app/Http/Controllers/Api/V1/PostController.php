@@ -51,7 +51,7 @@ class PostController extends Controller
 
     public function show(string $id)
     {    
-        $post = Post::with('user')->find($id);
+        $post = Post::with('user', 'book')->find($id);
 
         $postResource = new PostResource($post);
         return response()->json($postResource);

@@ -8,7 +8,7 @@ use Laravel\Sanctum\Http\Controllers\AccessTokenController; */
 use App\Http\Controllers\Api\V1\PostController;
 use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\UserController;
-use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\Auth\AuthController;
 
 
 Route::prefix('auth')->group(function () {
