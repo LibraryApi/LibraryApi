@@ -5,16 +5,16 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Comment;
-use App\Http\Resources\CommentResource;
+use App\Http\Resources\Comments\CommentResource;
 
 class CommentController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): \Illuminate\Http\JsonResponse
     {
-        $comments = CommentResource::collection(Comment::with('post', 'user')->get());
+        $comments = CommentResource::collection(Comment::with('user', 'commentable')->get());
 
         return response()->json($comments);
     }

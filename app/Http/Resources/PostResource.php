@@ -7,7 +7,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use App\Models\Post;
 use App\Http\Resources\UserResource;
 use App\Http\Resources\BookResource;
-use App\Http\Resources\CommentResource;
+use App\Http\Resources\Comments\CommentResource;
 
 class PostResource extends JsonResource
 {
@@ -24,10 +24,16 @@ class PostResource extends JsonResource
             //"comments"=> new CommentResource($this->comments),
             "title" => $this->title,
             "content" => $this->content,
-            //"book_id" => $this->book_id,
-            "book_id" => new UserResource($this->book),
+            "book_id" => $this->book_id,
+            //"book_id" => new UserResource($this->book),
             "created_at" => $this->created_at,
+            'comments' => $this->commentsData(),
         ];
+    }
+
+    protected function commentsData()
+    {
+        return CommentResource::collection($this->whenLoaded('comments'));
     }
     
 }

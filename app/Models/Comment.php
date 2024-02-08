@@ -14,8 +14,17 @@ class Comment extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function post()
+    public function commentable()
+    {
+        return $this->morphTo();
+    }
+    /* public function post()
     {
         return $this->belongsTo(Post::class);
     }
+
+    public function book()
+    {
+        return $this->belongsTo(Book::class);
+    } */
 }
