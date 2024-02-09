@@ -4,6 +4,13 @@ namespace App\Providers;
 
 // use Illuminate\Support\Facades\Gate;
 
+use App\Models\Book;
+use App\Models\Comment;
+use App\Models\Post;
+use App\Models\User;
+use App\Policies\BookPolicy;
+use App\Policies\CommentPolicy;
+use App\Policies\PostPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
@@ -18,6 +25,7 @@ class AuthServiceProvider extends ServiceProvider
         Post::class => PostPolicy::class,
         Book::class => BookPolicy::class,
         User::class => UserPolicy::class,
+        Comment::class => CommentPolicy::class,
     ];
 
     /**

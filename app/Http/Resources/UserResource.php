@@ -20,7 +20,6 @@ class UserResource extends JsonResource
             "name" => $this->name,
             "email"=> $this->email,
             "posts" => PostResource::collection($this->whenLoaded('posts')),
-            "title"=> $this->title,
             "created_at" => $this->created_at,
         ];
     }
