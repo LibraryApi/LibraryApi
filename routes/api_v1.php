@@ -25,7 +25,10 @@ Route::prefix('auth')->group(function () {
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/comments', [CommentController::class, 'index']);
-    Route::get('/comments/{id}', [CommentController::class, 'show']);
+    Route::post('/comments', [CommentController::class, 'store']);
+    Route::patch('/comments/{comment}', [CommentController::class, 'update']);
+    Route::get('/comments/{comment}', [CommentController::class, 'show']);
+    Route::delete('/comments/{id}', [CommentController::class, 'destroy']);
 
     Route::get('/users', [UserController::class, 'index']);
     Route::get('/users/{id}', [UserController::class, 'show']);
