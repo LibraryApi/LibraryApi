@@ -30,7 +30,7 @@ class CommentController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $id): \Illuminate\Http\JsonResponse
     {
         $comment = new CommentResource(Comment::with('user')->findOrFail($id));
         return response()->json($comment);

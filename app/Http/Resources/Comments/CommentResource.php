@@ -32,9 +32,9 @@ class CommentResource extends JsonResource
     {
 
         switch ($this->commentable_type) {
-            case 'Post':
+            case 'App\Models\Post':
                 return new PostResource(Post::find($this->commentable_id));
-            case 'Book':
+            case 'App\Models\Book':
                 return new BookResource(Book::find($this->commentable_id));
             default:
                 return null;
