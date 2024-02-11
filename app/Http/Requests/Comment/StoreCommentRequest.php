@@ -27,5 +27,5 @@ class StoreCommentRequest extends FormRequest
             'commentable_id.integer' => 'поле идентификатор комментируемого объекта должен быть числом',
         ];
     }
-
+    
 }
