@@ -12,7 +12,7 @@ use App\Services\RoleService;
 
 class AuthController extends Controller
 {
-    
+
     protected $roleService;
 
     public function __construct(RoleService $roleService)
