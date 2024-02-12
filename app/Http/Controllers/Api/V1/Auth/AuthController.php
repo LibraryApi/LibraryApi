@@ -29,7 +29,7 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $request->input('name'),
             'email' => $request->input('email'),
-            'password' => Hash::make($request->input('password')),
+            'password' => bcrypt($request->input('password')),
         ]);
 
         $this->roleService->assignRoleToUser($user, USER::ROLE_READER);
