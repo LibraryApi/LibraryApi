@@ -4,13 +4,15 @@ namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use App\Services\RoleService;
 
 class AuthController extends Controller
 {
-    
+
     protected $roleService;
 
     public function __construct(RoleService $roleService)
@@ -18,14 +20,8 @@ class AuthController extends Controller
         $this->roleService = $roleService;
     }
 
-    public function register(Request $request): \Illuminate\Http\JsonResponse
+    public function register(RegisterRequest $request): \Illuminate\Http\JsonResponse
     {
-        $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:4',
-        ]);
-
         $user = User::create([
             'name' => $request->input('name'),
             'email' => $request->input('email'),
@@ -39,14 +35,9 @@ class AuthController extends Controller
         return response()->json(['success' => $success, 'message' => 'Пользователь успешно зарегистрирован']);
     }
 
-    public function login(Request $request): \Illuminate\Http\JsonResponse
+    public function login(LoginRequest $request): \Illuminate\Http\JsonResponse
     {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string',
-        ]);
-
-        if (auth()->attempt($credentials)) {
+        if (auth()->attempt($request->validated())) {
             $user = User::where('email', $request->email)->first();
 
             if ($user->tokens->where('name', 'auth_token')->first()) {

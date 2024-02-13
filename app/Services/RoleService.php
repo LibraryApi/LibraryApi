@@ -13,7 +13,7 @@ class RoleService
 
     public function assignRoleToUser($user, $roleName)
     {
-        $role = Role::findByName($roleName);
+        $role = Role::find($roleName);
 
         if ($role) {
             $user->assignRole($role);
