@@ -22,8 +22,8 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => 'required|email',
-            'password' => 'required|string|min:4',
+            'email' => 'required|email|min:10|max:50',
+            'password' => 'required|string|min:4|max:40',
         ];
     }
 
@@ -31,10 +31,13 @@ class LoginRequest extends FormRequest
     {
         return [
             'email.required' => 'Вы должны указать свой email',
-            'email.email' => 'Данное поле должно быть email',
+            'email.email' => 'Введите валидный Email',
+            'email.min' => 'Минимальное колличество символов должно быть 10',
+            'email.max' => 'Максимальное колличество символов должно быть 50',
 
             'password.required' => 'Вы должны указать свой пароль',
             'password.min' => 'Минимальное колличество символов должно быть 4',
+            'password.max' => 'Максимальное колличество символов должно быть 40',
         ];
     }
 }
