@@ -11,8 +11,15 @@ class RoleService
         return Role::create(['name' => $roleName]);
     }
 
-    public function assignRoleToUser($user, $role)
+    public function assignRoleToUser($user, $roleName)
     {
-        $user->assignRole($role);
+        $role = Role::find($roleName);
+
+        if ($role) {
+            $user->assignRole($role);
+            return true;
+        }
+
+        return false;
     }
 }
