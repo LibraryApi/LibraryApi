@@ -8,27 +8,13 @@ class UserPolicy
 {
     use HandlesAuthorization;
 
-    public function viewAny(User $authUser)
+    public function update(User $authUser, User $targetUser)
     {
-        // Все пользователи могут видеть список пользователей
-        return true;
-    }
-
-    public function view(User $authUser, User $targetUser = null)
-    {
-        // Админы могут просматривать любого пользователя, другие пользователи - только себя
         return $authUser->hasRole(USER::ROLE_ADMIN) || $authUser->id === $targetUser->id;
     }
 
-    public function update(User $authUser, User $targetUser = null)
+    public function delete(User $authUser, User $targetUser)
     {
-        // Админы могут обновлять любого пользователя, другие пользователи - только себя
-        return $authUser->hasRole(USER::ROLE_ADMIN) || $authUser->id === $targetUser->id;
-    }
-
-    public function delete(User $authUser, User $targetUser = null)
-    {
-        // Админы могут удалять любого пользователя, другие пользователи - только себя
         return $authUser->hasRole(USER::ROLE_ADMIN) || $authUser->id === $targetUser->id;
     }
 }
