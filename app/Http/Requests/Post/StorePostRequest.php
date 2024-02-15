@@ -13,7 +13,8 @@ class StorePostRequest extends FormRequest
     {
         return [
             'title' => 'required|string|min:5|max:255',
-            'content' => 'required|string|min:5|max:1000',
+            'content' => 'required|string|min:5|max:10000',
+            'book_id' => 'nullable|exists:books,id',
         ];
     }
 
@@ -23,8 +24,10 @@ class StorePostRequest extends FormRequest
             "required" => "поле :attribute обязательно к заполнению",
             "unique" => ":attribute должно быть уникальным",
             "min" => "минимальное количество символов - 5",
-            "max" => "вы превысили максимальное количество символов",
-            "string" => "Ожидается текстовое значение"
+            "string" => "Ожидается текстовое значение",
+
+            "title.max" => "Максимальное колличество символов 255",
+            "content.max" => "Максимальное колличество символов 1000",
         ];
     }
 }

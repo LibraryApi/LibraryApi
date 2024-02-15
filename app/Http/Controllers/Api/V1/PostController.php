@@ -19,22 +19,14 @@ class PostController extends Controller
 
     public function index()
     {
-        
-        $posts = PostResource::collection(Post::with(["user", "comments"])->get());
+
+        $posts = PostResource::collection(Post::with(["user", "comments"])->paginate(10));
         return response()->json($posts);
     }
 
 
     public function store(StorePostRequest $request)
     {
-        $user = auth()->user();
-
-        $post = new Post([
-            'title' => $request->input('title'),
-            'content' => $request->input('content'),
-            'book_id' => $request->input('book_id'),
-        ]);
-
         if ($request->filled('book_id')) {
             $book = Book::find($request->input('book_id'));
 
@@ -43,16 +35,26 @@ class PostController extends Controller
             }
         }
 
-        $this->authorize('create', $post);
-        $user->posts()->save($post);
+        $post = new Post([
+            'title' => $request->input('title'),
+            'content' => $request->input('content'),
+            'book_id' => $request->input('book_id'),
+            'user_id' => auth()->user()->id,
+        ]);
 
-        return new PostResource($post);
+        $this->authorize('create', $post);
+        $post->save();
+
+        return response()->json(new PostResource($post), 201);
     }
 
     public function show(string $id)
-    {    
-        $post = Post::with('user', 'book')->find($id);
+    {
+        $post = Post::find($id);
 
+        if (!$post) {
+            return response()->json(['error' => 'Пост не найдена'], 404);
+        }
         $postResource = new PostResource($post);
         return response()->json($postResource);
     }
@@ -78,9 +80,9 @@ class PostController extends Controller
         $this->authorize('update', $post);
 
         $post->update([
-            'title' => $request->input('title'),
-            'content' => $request->input('content'),
-            'book_id' => $request->input('book_id'),
+            'title' => $request->has('title') ? $request->input('title') : $user->title,
+            'content' => $request->has('content') ? $request->input('content') : $user->content,
+            'book_id' => $request->has('book_id') ? $request->input('book_id') : $user->book_id,
         ]);
 
         return new PostResource($post);
