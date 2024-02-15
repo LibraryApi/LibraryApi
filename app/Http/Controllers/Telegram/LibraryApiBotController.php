@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Telegram;
 
+use App\Facades\Telegram;
 use App\Http\Controllers\Controller;
+use App\Models\Book;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -14,16 +16,11 @@ class LibraryApiBotController extends Controller
 
     public function __construct()
     {
-        $this->bot = env('LIBRARY_API_BOT_TOKEN');
+        $this->bot = env('TELEGRAM_BOT_TOKEN');
     }
 
-    public function sendMessage()
-    {
-            $url = self::DOMAIN . 'bot' . $this->bot . '/sendMessage';
-            Http::post($url, [
-                "chat_id" => $this->chatID,
-                "text" => "hellosds",
-                "parse_mode" => 'html'
-            ]);
+    public function getBooks(){
+        $books = Book::all();
+        return view('telegram.books', ['books' => $books]);
     }
 }

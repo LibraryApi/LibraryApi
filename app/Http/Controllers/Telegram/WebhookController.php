@@ -2,71 +2,61 @@
 
 namespace App\Http\Controllers\Telegram;
 
+use App\Facades\Telegram;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class WebhookController extends Controller
 {
-    public function setWebhook(Request $request)
+    protected $token;
+    protected $domain;
+    public function __construct()
+    {
+        $this->token = env('TELEGRAM_BOT_TOKEN');
+        $this->domain = 'https://api.telegram.org/bot';
+    }
+    public function setWebhook(Request $request): array
     {
         $url = $request->input('url');
 
-        $response = Http::post('https://api.telegram.org/bot' . env('LIBRARY_API_BOT_TOKEN') . '/setWebhook', [
+        $response = Http::post($this->domain . $this->token . '/setWebhook', [
             "url" => $url,
         ])->json();
         return $response;
     }
 
-    public function deleteWebhook()
+    public function deleteWebhook(): array
     {
-        $url = 'https://api.telegram.org/bot' . env('LIBRARY_API_BOT_TOKEN') . '/deleteWebhook';
+        $url = $this->domain . $this->token . '/deleteWebhook';
         $response = Http::post($url, [])->json();
         return $response;
     }
 
-    public function getWebhookInfo()
+    public function getWebhookInfo(): array
     {
-        $url = 'https://api.telegram.org/bot' . env('LIBRARY_API_BOT_TOKEN') . '/getWebhookInfo';
+        $url = $this->domain . $this->token . '/getWebhookInfo';
         $response = Http::post($url, [])->json();
         return $response;
     }
 
-    public function webhookHandler(Request $request)
+    public function webhookHandler(Request $request): \Illuminate\Http\JsonResponse
     {
-        // Получите данные из входящего запроса
 
         $data = $request->all();
-        // Запись данных в лог
-        Log::info('Webhook data:', $request->all());
-            // Проверяем, что есть сообщение
-            if (isset($data['message']['text'])) {
-                // Получаем текст сообщения
-                $messageText = strtolower($data['message']['text']);
-    
-                // Проверяем, содержит ли сообщение слово "привет"
-                if (strpos($messageText, 'привет') !== false) {
-                    // Отправляем ответное сообщение
-                    $chatID = $data['message']['chat']['id'];
-                    $this->sendResponse($chatID, 'Привет! Как дела?');
-                }
-            }
-    
-            // Верните ответ Telegram, например, 200 OK
-            return response()->json(['status' => 'ok']);
+
+        Log::info('Webhook data:', $data);
+
+        $handlerClass = Telegram::handle($request);
+
+        if ($handlerClass) {
+
+            $handlerInstance = new $handlerClass($request);
+
+            $handlerInstance->sendMessage();
         }
-    
-        // Функция для отправки ответного сообщения
-        private function sendResponse($chatID, $text)
-        {
-            $botToken = env('LIBRARY_API_BOT_TOKEN');
-            $url = "https://api.telegram.org/bot{$botToken}/sendMessage";
-    
-            Http::post($url, [
-                "chat_id" => 6109443752,
-                "text" => $text,
-            ]);
-        }
+
+        return response()->json(['status' => 'ok']);
+    }
 }

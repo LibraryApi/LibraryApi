@@ -60,7 +60,7 @@ Route::prefix('/books')->group(function () {
 });
 
 Route::prefix('/bot')->group(function () {
-    Route::get('/', [LibraryApiBotController::class, 'sendMessage']);
+    Route::get('/books', [LibraryApiBotController::class, 'getBooks']);
     Route::post('/webhook', [WebhookController::class, 'setWebhook']);
     Route::delete('/webhook', [WebhookController::class, 'deleteWebhook']);
     Route::get('/webhook', [WebhookController::class, 'getWebhookInfo']);
