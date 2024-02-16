@@ -22,16 +22,16 @@ class UpdateCommentRequest extends FormRequest
     public function rules()
     {
         return [
-            'content' => 'required|string|min:5', // Пример: минимальная длина текста - 5 символов
+            'content' => 'string|min:5|max:300'
         ];
     }
 
-    public function messages()
+    public function messages(): array
     {
         return [
-            'required' => 'поле :attribute обязательно к заполнению',
-            'string' => 'Ожидается текстовое значение',
-            'min' => 'минимальное количество символов - :min',
+            'content.required' => 'поле текст комментария обязательно к заполнению',
+            'content.min' => 'Минимальное колличество символов равно 5',
+            'content.max' => 'Максимальоне колличество символов равно 300'
         ];
     }
 }

@@ -12,9 +12,9 @@ class StoreCommentRequest extends FormRequest
     public function rules()
     {
         return [
-            'content' => 'required|string',
-            'commentable_id' => 'required|int',
-            'commentable_type'=> 'required|string'
+            'content' => 'required|string|min:5|max:300',
+            'commentable_id' => 'required|int|min:1',
+            'commentable_type'=> 'required|in:book,post|string'
         ];
     }
 
@@ -22,9 +22,14 @@ class StoreCommentRequest extends FormRequest
     {
         return [
             'content.required' => 'поле текст комментария обязательно к заполнению',
+            'content.min' => 'Минимальное колличество символов равно 5',
+            'content.max' => 'Максимальоне колличество символов равно 300',
+
             'commentable_id.required' => 'поле идентификатор комментируемого объекта обязательно к заполнению',
             'commentable_type.required' => 'поле тип комментируемого объекта обязательно к заполнению',
             'commentable_id.integer' => 'поле идентификатор комментируемого объекта должен быть числом',
+
+            "commentable_id" => 'Данные поле не может быть пустым'
         ];
     }
 

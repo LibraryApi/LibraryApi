@@ -24,6 +24,7 @@ class CommentResource extends JsonResource
             "content" => $this->content,
             "author" => new UserResource($this->whenLoaded('user')),
             'commentable_type' => $this->commentable_type,
+            'commentable_id' => $this->commentable_id,
             'commentable' => $this->commentableData(),
         ];
     }
@@ -32,10 +33,10 @@ class CommentResource extends JsonResource
     {
 
         switch ($this->commentable_type) {
-            case 'App\Models\Post':
-                return new PostResource(Post::find($this->commentable_id));
-            case 'App\Models\Book':
-                return new BookResource(Book::find($this->commentable_id));
+            case 'post':
+                return new PostResource(Post::findOrFail($this->commentable_id));
+            case 'book':
+                return new BookResource(Book::findOrFail($this->commentable_id));
             default:
                 return null;
         }
