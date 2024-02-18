@@ -60,9 +60,11 @@ Route::prefix('/books')->group(function () {
 });
 
 Route::prefix('/bot')->group(function () {
-    Route::get('/books', [LibraryApiBotController::class, 'getBooks']);
     Route::post('/webhook', [WebhookController::class, 'setWebhook']);
     Route::delete('/webhook', [WebhookController::class, 'deleteWebhook']);
     Route::get('/webhook', [WebhookController::class, 'getWebhookInfo']);
-    Route::post('/webhookdata', [WebhookController::class, 'webhookHandler']);
+    
+    Route::post('/library_api', [WebhookController::class, 'LibraryApiHandler']);
+    Route::post('/library_news', [WebhookController::class, 'LibraryNewsHandler']);
+    Route::post('/library_admin', [WebhookController::class, 'LibraryAdminHandler']);
 });

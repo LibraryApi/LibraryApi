@@ -7,13 +7,13 @@ class TelegramMessage extends TelegramBot
     protected $data;
     protected $method;
 
-    public function message(mixed $chat_id, string $text, $reply_id = null): TelegramMessage
+    public function message(mixed $chat_id, string $text, string $parse_mode = 'html', $reply_id = null): TelegramMessage
     {
         $this->method = 'sendMessage';
         $this->data = [
             'chat_id' => $chat_id,
             'text' => $text,
-            'parse_mode' => 'html',
+            'parse_mode' => $parse_mode,
             'link_preview_options' => [
                 'is_disabled' => true
             ],

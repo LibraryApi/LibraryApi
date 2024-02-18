@@ -27,7 +27,7 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
            
             $text = (string)view('telegram.error', ['e' => $e]);
-            $url = 'https://api.telegram.org/bot6790010215:AAEHj3dG7674TW7pKmjmZdeVOWDFE-qEEtQ/sendMessage';
+            $url = 'https://api.telegram.org/bot' . env("TELEGRAM_ADMIN_BOT_TOKEN") . '/sendMessage';
             Http::post($url, [
                 "chat_id" => 6109443752,
                 "text" => $text,

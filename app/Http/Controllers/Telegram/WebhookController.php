@@ -14,7 +14,7 @@ class WebhookController extends Controller
     protected $domain;
     public function __construct()
     {
-        $this->token = env('TELEGRAM_BOT_TOKEN');
+        $this->token = env('TELEGRAM_ADMIN_BOT_TOKEN');
         $this->domain = 'https://api.telegram.org/bot';
     }
     public function setWebhook(Request $request): array
@@ -41,19 +41,59 @@ class WebhookController extends Controller
         return $response;
     }
 
-    public function webhookHandler(Request $request): \Illuminate\Http\JsonResponse
+    public function LibraryApiHandler(Request $request): \Illuminate\Http\JsonResponse
     {
 
         $data = $request->all();
-
+        $botType = 'LibraryApiBot';
         Log::info('Webhook data:', $data);
+        Telegram::setToken($botType);
 
         $handlerClass = Telegram::handle($request);
 
         if ($handlerClass) {
 
             $handlerInstance = new $handlerClass($request);
+            $handlerInstance->setBotType($botType);
+            $handlerInstance->sendMessage();
+        }
+        return response()->json(['status' => 'ok']);
+    }
 
+    public function LibraryNewsHandler(Request $request): \Illuminate\Http\JsonResponse
+    {
+
+        $data = $request->all();
+        $botType = 'LibraryNewsBot';
+        Log::info('Webhook data:', $data);
+        Telegram::setToken($botType);
+
+        $handlerClass = Telegram::handle($request);
+
+        if ($handlerClass) {
+
+            $handlerInstance = new $handlerClass($request);
+            $handlerInstance->setBotType($botType);
+            $handlerInstance->sendMessage();
+        }
+
+        return response()->json(['status' => 'ok']);
+    }
+
+    public function LibraryAdminHandler(Request $request): \Illuminate\Http\JsonResponse
+    {
+
+        $data = $request->all();
+        $botType = 'LibraryAdminBot';
+        Log::info('Webhook data:', $data);
+        Telegram::setToken($botType);
+
+        $handlerClass = Telegram::handle($request);
+
+        if ($handlerClass) {
+
+            $handlerInstance = new $handlerClass($request);
+            $handlerInstance->setBotType($botType);
             $handlerInstance->sendMessage();
         }
 
