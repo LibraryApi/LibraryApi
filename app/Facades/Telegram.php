@@ -2,9 +2,6 @@
 
 namespace App\Facades;
 
-use App\Telegram\Bot\Bot;
-use App\Telegram\Bot\File;
-use App\Telegram\Bot\Message;
 use Illuminate\Support\Facades\Facade;
 
 /**

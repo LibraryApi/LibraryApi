@@ -10,8 +10,6 @@ use App\Http\Controllers\Api\V1\PostController;
 use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
-use App\Http\Controllers\Telegram\LibraryApiBotController;
-use Illuminate\Support\Facades\Http;
 
 Route::prefix('auth')->group(function () {
     Route::group(['middleware' => 'auth:sanctum'], function () {
