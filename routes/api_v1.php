@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Telegram\WebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\BookController;
@@ -9,7 +10,6 @@ use App\Http\Controllers\Api\V1\PostController;
 use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
-
 
 Route::prefix('auth')->group(function () {
     Route::group(['middleware' => 'auth:sanctum'], function () {
@@ -52,7 +52,17 @@ Route::prefix('/books')->group(function () {
         Route::patch('/{id}', [BookController::class, 'update']);
         Route::delete('/{id}', [BookController::class, 'destroy']);
     });
-    
+
     Route::get('/', [BookController::class, 'index']);
     Route::get('/{id}', [BookController::class, 'show']);
+});
+
+Route::prefix('/bot')->group(function () {
+    Route::post('/webhook', [WebhookController::class, 'setWebhook']);
+    Route::delete('/webhook', [WebhookController::class, 'deleteWebhook']);
+    Route::get('/webhook', [WebhookController::class, 'getWebhookInfo']);
+    
+    Route::post('/library_api', [WebhookController::class, 'LibraryApiHandler']);
+    Route::post('/library_news', [WebhookController::class, 'LibraryNewsHandler']);
+    Route::post('/library_admin', [WebhookController::class, 'LibraryAdminHandler']);
 });
