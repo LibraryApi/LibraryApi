@@ -5,6 +5,8 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Models\Post;
+use App\Models\User;
+use App\Models\Comment;
 use App\Http\Resources\UserResource;
 use App\Http\Resources\BookResource;
 use App\Http\Resources\Comments\CommentResource;
@@ -20,20 +22,18 @@ class PostResource extends JsonResource
     {
         return [  
             "id"=> $this->id,
-            "author" => new UserResource($this->user),
-            //"comments"=> new CommentResource($this->comments),
+            "user" => new UserResource(User::findOrFail($this->user_id)),
+            'comments' => $this->commentsData(),
             "title" => $this->title,
             "content" => $this->content,
             "book_id" => $this->book_id,
-            //"book_id" => new UserResource($this->book),
             "created_at" => $this->created_at,
-            'comments' => $this->commentsData(),
         ];
     }
 
     protected function commentsData()
     {
-        return CommentResource::collection($this->whenLoaded('comments'));
+        return new CommentResource(Comment::where('commentable_type', 'post')->where('commentable_id', $this->id)->first());
     }
     
 }
