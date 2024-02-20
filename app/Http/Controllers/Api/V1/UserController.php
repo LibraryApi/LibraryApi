@@ -28,7 +28,9 @@ class UserController extends Controller
      */
     public function show(string $id): \Illuminate\Http\JsonResponse
     {
-        $user = User::find($id);
+
+        $user = User::with('posts')->find($id);
+        main
 
         if (!$user) {
             return response()->json(['error' => 'Пользователь не найден'], 404);
