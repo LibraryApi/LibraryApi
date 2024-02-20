@@ -36,8 +36,26 @@ class UserSeeder extends Seeder
         ]);
         $readerUser->assignRole('reader');
 
-        User::factory()->count(10)->create()->each(function ($user) {
-            $user->assignRole('reader');
-        });
+        $readerUser2 = User::factory()->create([
+            'name' => 'Леха',
+            'email' => 'leha@gmail.com',
+            'password' => 'leha'
+        ]);
+        $readerUser2->assignRole('reader');
+
+        $authorUser2 = User::factory()->create([
+            'name' => 'Султан',
+            'email' => 'sultan@gmail.com',
+            'password' => 'sultan'
+        ]);
+        $authorUser2->assignRole('author');
+
+        $authorUser3 = User::factory()->create([
+            'name' => 'Руслан',
+            'email' => 'ruslan@gmail.com',
+            'password' => 'ruslan'
+        ]);
+        $authorUser3->assignRole('author');
+
     }
 }
