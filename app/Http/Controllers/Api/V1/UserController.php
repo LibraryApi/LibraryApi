@@ -30,8 +30,6 @@ class UserController extends Controller
     {
 
         $user = User::with('posts')->find($id);
-        main
-
         if (!$user) {
             return response()->json(['error' => 'Пользователь не найден'], 404);
         }

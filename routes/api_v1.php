@@ -3,13 +3,14 @@
 use App\Http\Controllers\Telegram\WebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\V1\BookController;
+use App\Http\Controllers\Api\V1\Book\BookController;
 /* use Laravel\Sanctum\Http\Controllers\CsrfCookieController;
 use Laravel\Sanctum\Http\Controllers\AccessTokenController; */
 use App\Http\Controllers\Api\V1\PostController;
 use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\Book\ChapterController;
 
 Route::prefix('auth')->group(function () {
     Route::group(['middleware' => 'auth:sanctum'], function () {
@@ -49,12 +50,17 @@ Route::prefix('/posts')->group(function () {
 Route::prefix('/books')->group(function () {
     Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::post('/', [BookController::class, 'store']);
-        Route::patch('/{id}', [BookController::class, 'update']);
-        Route::delete('/{id}', [BookController::class, 'destroy']);
+        Route::patch('/{bookId}', [BookController::class, 'update']);
+        Route::delete('/{bookId}', [BookController::class, 'destroy']);
+        Route::post('/{bookId}/chapters', [ChapterController::class, 'store']); 
+        Route::patch('/{bookId}/chapters/{chapterId}', [ChapterController::class, 'update']); 
+        Route::delete('/{bookId}/chapters/{chapterId}', [ChapterController::class, 'destroy']); 
     });
 
     Route::get('/', [BookController::class, 'index']);
-    Route::get('/{id}', [BookController::class, 'show']);
+    Route::get('/{bookId}', [BookController::class, 'show']);
+    Route::get('/{bookId}/chapters', [ChapterController::class, 'index']); 
+    Route::get('/{bookId}/chapters/{chapterId}', [ChapterController::class, 'show']);
 });
 
 Route::prefix('/bot')->group(function () {
