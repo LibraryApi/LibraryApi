@@ -20,8 +20,10 @@ class DatabaseSeeder extends Seeder
             RoleSystemSeeder::class,
             UserSeeder::class,
             BookSeeder::class,
+            ChapterSeeder::class,
             PostSeeder::class,
             CommentSeeder::class,
+            CategorySeeder::class,
             
         ]);
         /* $book = Book::factory()->count(10)->create();

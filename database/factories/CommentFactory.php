@@ -18,8 +18,9 @@ class CommentFactory extends Factory
     {
         return [
             "user_id"=> rand(1,9),
-            'post_id' => rand(1,9),
-            "content" => $this->faker->paragraph(3), //содержание комментария
+            "content" => $this->faker->paragraph(3),
+            "commentable_id" => '1',
+            "commentable_type" => "post",
         ];
     }
 }

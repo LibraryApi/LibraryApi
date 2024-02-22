@@ -9,7 +9,21 @@ class Book extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'author', 'description', 'user_id'];
+    protected $fillable = [
+        'title',
+        'author',
+        'description',
+        'user_id',
+        'cover_image',
+        'author_bio',
+        'language',
+        'rating',
+        'number_of_pages',
+        'is_published',
+        'comments_count',
+        'likes_count',
+        'views_count',
+    ];
 
     public function user()
     {
@@ -21,6 +35,16 @@ class Book extends Model
         return $this->hasMany(Post::class);
     }
 
+    public function chapters()
+    {
+        return $this->hasMany(Chapter::class);
+    }
+
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class);
+    }
+    
     public function getAuthorNameAttribute()
     {
         return $this->user->name;

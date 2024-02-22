@@ -18,6 +18,7 @@ Route::get('/', function () {
 });
 
 Route::get('/test', function () {
+    dd(phpinfo());
     return view('test');
 });
 
