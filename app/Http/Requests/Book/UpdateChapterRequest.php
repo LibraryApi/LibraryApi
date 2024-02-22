@@ -20,7 +20,7 @@ class UpdateChapterRequest extends FormRequest
 
         return [
             'title' => "string|min:5|max:50|unique:chapters,title,{$chapterId}",
-            'content' => 'string|required_without_all:number,duration,characters,images',
+            'content' => 'string|required_without_all:title,number,duration,characters,images',
             'number' => 'integer',
             'duration' => 'nullable|string',
             'characters' => 'nullable|string',
@@ -38,7 +38,7 @@ class UpdateChapterRequest extends FormRequest
             'title.max' => 'Максимальное количество символов для :attribute - 50',
             'title.min' => 'Минимальное количество символов для :attribute - 5',
 
-            'required_without_all' => 'Обязательно нужно внести изменения хотя бы в одно поле либо content становится обязательным'
+            'required_without_all' => 'Обязательно нужно внести изменения хотя бы в одно поле из либо content становится обязательным'
         ];
     }
 }

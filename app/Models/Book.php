@@ -40,6 +40,11 @@ class Book extends Model
         return $this->hasMany(Chapter::class);
     }
 
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class);
+    }
+    
     public function getAuthorNameAttribute()
     {
         return $this->user->name;

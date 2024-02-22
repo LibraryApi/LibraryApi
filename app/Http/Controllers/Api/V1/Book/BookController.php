@@ -9,6 +9,7 @@ use App\Http\Resources\Books\BookResource;
 use App\Services\RoleService;
 use App\Models\Book;
 use App\Models\User;
+use Illuminate\Http\Request;
 
 class BookController extends Controller
 {
@@ -19,9 +20,23 @@ class BookController extends Controller
         $this->roleService = $roleService;
     }
 
-    public function index(): \Illuminate\Http\JsonResponse
+    public function index(Request $request): \Illuminate\Http\JsonResponse
     {
-        $books = BookResource::collection(Book::all());
+        $query = Book::query();
+        if ($request->has('author')) {
+            $query->where('author', $request->input('author'));
+        }
+
+        if ($request->has('category')) {
+            $query->whereHas('categories', function ($categoryQuery) use ($request) {
+                $categoryQuery->where('name', $request->input('category'));
+            });
+        }
+
+        $perPage = $request->input('per_page', 10);
+        $books = $query->paginate($perPage);
+
+        $books = BookResource::collection($books);
         return response()->json($books);
     }
 
@@ -49,6 +64,11 @@ class BookController extends Controller
 
         $this->authorize('create', $book);
         $book->save();
+
+        if (isset($data['categories'])) {
+            $book->categories()->attach($data['categories']);
+        }
+
         $book = new BookResource($book);
 
         return response()->json($book, 201);
@@ -77,6 +97,11 @@ class BookController extends Controller
 
         $this->authorize('update', $book);
         $book->update($data);
+
+        if (isset($data['categories'])) {
+            $book->categories()->sync($data['categories']);
+        }
+
         $book = new BookResource($book);
 
         return response()->json($book, 200);
