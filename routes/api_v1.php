@@ -1,12 +1,10 @@
 <?php
 
 use App\Http\Controllers\Api\V1\CategoryController;
+use App\Http\Controllers\Api\V1\ExportController;
 use App\Http\Controllers\Telegram\WebhookController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Book\BookController;
-/* use Laravel\Sanctum\Http\Controllers\CsrfCookieController;
-use Laravel\Sanctum\Http\Controllers\AccessTokenController; */
 use App\Http\Controllers\Api\V1\PostController;
 use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\UserController;
@@ -29,10 +27,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('comments', CommentController::class);
     Route::apiResource('users', UserController::class);
     Route::apiResource('posts', PostController::class);
+
     Route::apiResource('books', BookController::class);
+
     Route::apiResource('books.chapters', ChapterController::class);
     Route::apiResource('categories', CategoryController::class);
 });
+
+Route::get('export', [ExportController::class, 'export']);
 
 Route::prefix('/bot')->group(function () {
     Route::post('/webhook', [WebhookController::class, 'setWebhook']);
