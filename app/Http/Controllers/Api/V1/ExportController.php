@@ -2,24 +2,41 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Exports\BooksExport;
-use App\Exports\PostsExport;
+
+use App\Exports\ExselCollectionExport;
 use App\Http\Controllers\Controller;
+use App\Services\ExportService\BooksExportService;
+use App\Services\ExportService\PostsExportService;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ExportController extends Controller
 {
-    public function export(Request $request){
 
-        $entities = $request->input('entities');
+    public function export(Request $request)
+    {
 
-        if(isset($entities) & $entities == 'books'){
-            return Excel::download(new BooksExport($request), 'books.xlsx');
+        $entity = $this->getEntity($request);
+        $exportParams = $this->getExportParams($request);
+        $exportClasses = [
+            'books' => BooksExportService::class,
+            'posts' =>  PostsExportService::class,
+        ];
+
+        if (isset($entity) && array_key_exists($entity, $exportClasses)) {
+            $exportClass = $exportClasses[$entity];
+            return Excel::download(new ExselCollectionExport($exportParams,new $exportClass), $entity . '.xlsx');
         }
 
-        if(isset($entities) & $entities == 'posts'){
-            return Excel::download(new PostsExport($request), 'posts.xlsx');
-        }
+        return response()->json(['error' => 'неизвестная сущность'], 400);
+    }
+
+    public function getEntity(Request $request)
+    {
+        return $request->input('entity');
+    }
+
+    public function getExportParams(Request $request){
+        return $request->all();
     }
 }
