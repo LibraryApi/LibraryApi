@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
+use App\Events\UserRegistered;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Requests\Auth\RegisterRequest;
@@ -32,6 +33,9 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
         $success = ["user" => $user->name, "token" => $token];
+
+        event(new UserRegistered($user));
+        
         return response()->json(['success' => $success, 'message' => 'Пользователь успешно зарегистрирован']);
     }
 
