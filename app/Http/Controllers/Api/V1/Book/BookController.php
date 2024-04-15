@@ -9,15 +9,18 @@ use App\Http\Resources\Books\BookResource;
 use App\Services\RoleService;
 use App\Models\Book;
 use App\Models\User;
+use App\Services\Telegram\WebhookSenders\WebhookSender;
 use Illuminate\Http\Request;
 
 class BookController extends Controller
 {
     protected $roleService;
+    protected $telegram;
 
     public function __construct(RoleService $roleService)
     {
         $this->roleService = $roleService;
+        $this->telegram = new WebhookSender();
     }
 
     public function index(Request $request): \Illuminate\Http\JsonResponse
@@ -37,6 +40,43 @@ class BookController extends Controller
         $books = $query->paginate($perPage);
 
         $books = BookResource::collection($books);
+
+        $user = auth()->user();
+        $telegram = $this->telegram
+            ->createMessageSender('buttons');
+        $telegram->message(
+            [
+                'text' => "Пользователь {$user->name} просматривает книги",
+                'buttons' =>
+                [
+                    'inline_keyboard' => [
+                        [
+                            ['text' => 'Книга 1', 'callback_data' => 'button1'],
+                            ['text' => 'Книга 2', 'callback_data' => 'button2'],
+                        ]
+                    ],
+                ],
+            ]
+        )->sendMessage();
+
+        /* $user = auth()->user();
+        $telegram = $this->telegram
+            ->createMessageSender('buttons');
+        $telegram->message(
+            [
+                'text' => "Пользователь {$user->name} просматривает книги",
+                'buttons' =>
+                [
+                    'inline_keyboard' => [
+                        [
+                            ['text' => 'Книга 1', 'callback_data' => 'button1'],
+                            ['text' => 'Книга 2', 'callback_data' => 'button2'],
+                        ]
+                    ],
+                ],
+            ]
+        )->sendMessage();
+ */
         return response()->json($books);
     }
 
@@ -82,6 +122,12 @@ class BookController extends Controller
             return response()->json(['error' => 'Книга не найдена'], 404);
         }
         $book = new BookResource($book);
+
+        $user = auth()->user();
+
+        $telegram = $this->telegram->createMessageSender();
+        $telegram->message(['text' => "Пользователь {$user->name} открыл книгу \"{$book->title}\""])->sendMessage();
+
         return response()->json($book);
     }
 

@@ -4,65 +4,37 @@ namespace App\Services\Telegram\WebhookSenders;
 
 use App\Interfaces\Telegram\WebhookSenderInterface;
 use App\Services\Telegram\WebhookSenders\Buttons\ButtonSender;
-use App\Services\Telegram\WebhookSenders\Documents\DocumentSerder;
+use App\Services\Telegram\WebhookSenders\Documents\DocumentSender;
 use App\Services\Telegram\WebhookSenders\Texts\TextSender;
 use Illuminate\Support\Facades\Http;
 
 class WebhookSender implements WebhookSenderInterface
 {
     protected $token;
-
     protected $bot_type;
-
     protected $chat_id;
+    protected $send_method;
+    protected $data;
     protected static $senders = [
         "text" => TextSender::class,
-        "document" => DocumentSerder::class,
+        "document" => DocumentSender::class,
         "buttons" => ButtonSender::class
 
     ];
     public function sendMessage(): void
     {
-        Http::post(
-            'https://api.telegram.org/bot' . $this->token . '/' . "sendMessage",
-            [
-                'chat_id' => $this->chat_id,
-                'text' => "Это ответ от родителя сендлера",
-                'parse_mode' => 'html',
-                'link_preview_options' => [
-                    'is_disabled' => true
-                ],
-
-            ],
+        $res = Http::post(
+            'https://api.telegram.org/bot' . $this->token . '/' . $this->send_method,
+            $this->data
         )->json();
     }
 
-    public function createMessageSender(array $message): ?WebhookSenderInterface
+    public function createMessageSender(string $messageType = 'text'): WebhookSenderInterface
     {
-        if (isset(self::$senders[$message['message_type']])) {
-            return new self::$senders[$message['message_type']];
+        if (isset(self::$senders[$messageType])) {
+            return new self::$senders[$messageType];
         }
-        return null;
-    }
-    public function message(array $message): self
-    {
-        $this->chat_id = $message['chat_id'];
-        $method = 'sendMessage';
-        $data = [
-            'chat_id' => $this->chat_id,
-            'text' => $message['text'],
-            'parse_mode' => $message['parse_mode'],
-            'link_preview_options' => [
-                'is_disabled' => true
-            ],
-
-        ];
-        if ($message['reply_id']) {
-            $data['reply_parameters'] = [
-                'message_id' => $message['reply_id']
-            ];
-        }
-        return $this;
+        //return new TextSender();
     }
 
     public function setToken(string $botType): ?string
@@ -83,5 +55,4 @@ class WebhookSender implements WebhookSenderInterface
     {
         $this->bot_type = $botType;
     }
-
 }

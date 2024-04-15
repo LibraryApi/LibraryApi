@@ -7,31 +7,21 @@ use Illuminate\Support\Facades\Http;
 
 class TextSender extends WebhookSender
 {
-    protected $data;
-    protected $method;
-
-    public function sendMessage(): void
-    {
-        Http::post(
-            'https://api.telegram.org/bot' . $this->token . '/' . $this->method,
-            $this->data
-        )->json();
-    }
     public function message(array $message): self
     {
-        $this->setToken($message['bot_type']);
+        $this->setToken($message['bot_type'] ?? 'LibraryAdminBot');
+        $this->send_method = 'sendMessage';
+        $this->chat_id = $message['chat_id'] ?? 6109443752;
 
-        $this->method = 'sendMessage';
         $this->data = [
-            'chat_id' => $message['chat_id'],
+            'chat_id' => $this->chat_id,
             'text' => $message['text'],
-            'parse_mode' => $message['parse_mode'],
+            'parse_mode' => $message['parse_mode'] ?? 'html',
             'link_preview_options' => [
                 'is_disabled' => true
             ],
-
         ];
-        if($message['reply_id'])
+        if(isset($message['reply_id']))
         {
             $this->data['reply_parameters'] = [
                 'message_id' => $message['reply_id']
@@ -40,11 +30,11 @@ class TextSender extends WebhookSender
         return $this;
     }
 
-    public function editMessage(string $message): self
+    /* public function editMessage(string $message): self
     {
         $this->setToken($message['bot_type']);
 
-        $this->method = 'editMessageText';
+        $this->send_method = 'editMessageText';
         $this->data = [
             'chat_id' => $message['message_id'],
             'text' => $message['text'],
@@ -52,5 +42,5 @@ class TextSender extends WebhookSender
             'message_id' => $message['message_id']
         ];
         return $this;
-    }
+    } */
 }

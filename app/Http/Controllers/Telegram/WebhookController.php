@@ -70,8 +70,9 @@ class WebhookController extends Controller
             return response()->json(['status' => 'ok']);
         }
         $message = $messageHandler->handle();
+        $messageType = $message['message_type'];
 
-        $messageSendler = $webhookSender->createMessageSender($message);
+        $messageSendler = $webhookSender->createMessageSender($messageType);
         $messageSendler->message($message)->sendMessage();
 
         return response()->json(['status' => 'ok']);
