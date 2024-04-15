@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Http;
 class WebhookSender implements WebhookSenderInterface
 {
     protected $token;
-    protected $bot_type;
     protected $chat_id;
     protected $send_method;
     protected $data;
@@ -34,7 +33,7 @@ class WebhookSender implements WebhookSenderInterface
         if (isset(self::$senders[$messageType])) {
             return new self::$senders[$messageType];
         }
-        //return new TextSender();
+        return new TextSender();
     }
 
     public function setToken(string $botType): ?string
@@ -51,8 +50,7 @@ class WebhookSender implements WebhookSenderInterface
         return null;
     }
 
-    protected function setBotType(string $botType): void
-    {
-        $this->bot_type = $botType;
+    public function message(array $message): self {
+        return $this;
     }
 }

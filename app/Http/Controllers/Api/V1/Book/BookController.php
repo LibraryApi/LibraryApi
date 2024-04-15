@@ -10,7 +10,9 @@ use App\Services\RoleService;
 use App\Models\Book;
 use App\Models\User;
 use App\Services\Telegram\WebhookSenders\WebhookSender;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class BookController extends Controller
 {
@@ -41,42 +43,9 @@ class BookController extends Controller
 
         $books = BookResource::collection($books);
 
-        $user = auth()->user();
-        $telegram = $this->telegram
-            ->createMessageSender('buttons');
-        $telegram->message(
-            [
-                'text' => "Пользователь {$user->name} просматривает книги",
-                'buttons' =>
-                [
-                    'inline_keyboard' => [
-                        [
-                            ['text' => 'Книга 1', 'callback_data' => 'button1'],
-                            ['text' => 'Книга 2', 'callback_data' => 'button2'],
-                        ]
-                    ],
-                ],
-            ]
-        )->sendMessage();
+        $telegram = $this->telegram->createMessageSender('document');
+        $telegram->message(["caption" => "отчет за апрель", "document" => Storage::get('/public/file.png'), "filename" => "отчет.doc"])->sendMessage();
 
-        /* $user = auth()->user();
-        $telegram = $this->telegram
-            ->createMessageSender('buttons');
-        $telegram->message(
-            [
-                'text' => "Пользователь {$user->name} просматривает книги",
-                'buttons' =>
-                [
-                    'inline_keyboard' => [
-                        [
-                            ['text' => 'Книга 1', 'callback_data' => 'button1'],
-                            ['text' => 'Книга 2', 'callback_data' => 'button2'],
-                        ]
-                    ],
-                ],
-            ]
-        )->sendMessage();
- */
         return response()->json($books);
     }
 

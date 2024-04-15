@@ -27,9 +27,4 @@ class ButtonSender extends WebhookSender
         }
         return $this;
     }
-
-    /* public function editMessage()
-    {
-        return "editText";
-    } */
 }
