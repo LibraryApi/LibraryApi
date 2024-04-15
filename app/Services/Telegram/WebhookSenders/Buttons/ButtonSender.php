@@ -6,39 +6,25 @@ use Illuminate\Support\Facades\Http;
 
 class ButtonSender extends WebhookSender
 {
-    protected $data;
-    protected $method;
-
-    public function sendMessage(): void
-    {
-        Http::post(
-            'https://api.telegram.org/bot' . $this->token . '/' . $this->method,
-            $this->data
-        )->json();
-    }
     public function message(array $message): self
     {
 
-        $this->setToken($message['bot_type']);
+        $this->setToken($message['bot_type'] ?? 'LibraryAdminBot');
+        $this->send_method = 'sendMessage';
+        $this->chat_id = $message['chat_id'] ?? 6109443752;
 
-        $this->method = 'sendMessage';
         $this->data = [
-            'chat_id' => $message['chat_id'],
+            'chat_id' => $this->chat_id,
             'text' => $message['text'],
-            'parse_mode' => 'html',
+            'parse_mode' => $message['parse_mode'] ?? 'html',
             'reply_markup' => $message['buttons'],
         ];
-        if($message['reply_id'])
+        if(isset($message['reply_id']))
         {
             $this->data['reply_parameters'] = [
                 'message_id' => $message['reply_id']
             ];
         }
         return $this;
-    }
-
-    public function editMessage()
-    {
-        return "editText";
     }
 }

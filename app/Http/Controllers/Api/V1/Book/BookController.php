@@ -9,15 +9,20 @@ use App\Http\Resources\Books\BookResource;
 use App\Services\RoleService;
 use App\Models\Book;
 use App\Models\User;
+use App\Services\Telegram\WebhookSenders\WebhookSender;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class BookController extends Controller
 {
     protected $roleService;
+    protected $telegram;
 
     public function __construct(RoleService $roleService)
     {
         $this->roleService = $roleService;
+        $this->telegram = new WebhookSender();
     }
 
     public function index(Request $request): \Illuminate\Http\JsonResponse
@@ -37,6 +42,10 @@ class BookController extends Controller
         $books = $query->paginate($perPage);
 
         $books = BookResource::collection($books);
+
+        $telegram = $this->telegram->createMessageSender('document');
+        $telegram->message(["caption" => "отчет за апрель", "document" => Storage::get('/public/file.png'), "filename" => "отчет.doc"])->sendMessage();
+
         return response()->json($books);
     }
 
@@ -82,6 +91,12 @@ class BookController extends Controller
             return response()->json(['error' => 'Книга не найдена'], 404);
         }
         $book = new BookResource($book);
+
+        $user = auth()->user();
+
+        $telegram = $this->telegram->createMessageSender();
+        $telegram->message(['text' => "Пользователь {$user->name} открыл книгу \"{$book->title}\""])->sendMessage();
+
         return response()->json($book);
     }
 
