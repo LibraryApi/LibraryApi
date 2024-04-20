@@ -5,67 +5,35 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Subscription\SubscriptionRequest;
 use App\Models\Subscription;
-use App\Models\User;
-use Illuminate\Http\Request;
+use App\Services\SubscriptionService\SubscriptionService;
+
 
 class SubscriptionController extends Controller
 {
     public function index()
     {
-        //dd('hello');
         return Subscription::all();
     }
 
-    public function subscribe(SubscriptionRequest $request)
+    public function subscribe(SubscriptionRequest $request, SubscriptionService $subscriptionService)
     {
         $user = auth()->user();
 
-        if ($user->subscription) {
+        $result = $subscriptionService->subscribe($user, $request->all());
 
-            if ($user->subscription->access_level == $request->input('access_level')) {
-
-                return response()->json(['message' => 'У вас уже есть подписка этого уровня доступа'], 422);
-            } elseif ($this->isHigherAccessLevel($user->subscription->access_level, $request->input('access_level'))) {
-
-                return response()->json(['message' => 'У вас уже оформлена подписка более высокого уровня'], 422);
-            } else {
-
-                $user->subscription->delete();
-            }
+        if ($result['success']) {
+            return response()->json($result['subscription'], 201);
+        } else {
+            return response()->json(['message' => $result['message']], $result['status']);
         }
-
-        $subscribe = $user->subscription()->create($request->all());
-
-        return response()->json($subscribe, 201);
     }
 
 
-    private function isHigherAccessLevel($currentLevel, $newLevel)
-    {
-
-        $accessLevels = [
-            'basic' => 1,
-            'premium' => 2,
-        ];
-
-        return  $accessLevels[$currentLevel] > $accessLevels[$newLevel];
-    }
-
-
-
-    public function unsubscribe(SubscriptionRequest $request)
+    public function unsubscribe(SubscriptionService $subscriptionService)
     {
         $user = auth()->user();
-        $subscription = $user->subscription;
+        $result = $subscriptionService->unsubscribe($user);
 
-        if (!$subscription) {
-            // Подписка не найдена
-            return response()->json(['error' => 'Subscription not found'], 404);
-        }
-
-        // Удаление подписки
-        $subscription->delete();
-
-        return response()->json(['message' => 'Unsubscribed successfully'], 200);
+        return response()->json($result, $result['status']);
     }
 }
