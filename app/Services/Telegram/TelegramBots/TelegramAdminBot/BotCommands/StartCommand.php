@@ -6,8 +6,6 @@ use App\Interfaces\Telegram\TelegramBot\Command\TelegramCommandInterface;
 use App\Models\Book;
 use App\Models\Post;
 use App\Services\Telegram\TelegramBots\TelegramAdminBot\TelegramAdminBot;
-use App\Services\Telegram\WebhookHandlers\WebhookHandler;
-use Illuminate\Http\Request;
 
 class StartCommand extends TelegramAdminBot implements TelegramCommandInterface
 {
@@ -20,67 +18,101 @@ class StartCommand extends TelegramAdminBot implements TelegramCommandInterface
     }
     public function buildMessage()
     {
-        
-        $command = $this->handler->command_name;
-        if (isset($command) && $command == 'books_list') {
+        $callback = $this->handler->getCallbackQuery();
 
-            $books = $this->getBooks();
-            $message = ['text' => $books];
-            return $this->handler->buildMessage($message);
+        if (isset($callback['command']) && $callback['command'] == 'books_list') {
+
+            return $this->buildBooksMessage();
         }
 
-        if (isset($command) && $command == 'posts_list') {
+        if (isset($callback['command']) && $callback['command'] == 'posts_list') {
 
-            $posts = $this->getPosts();
-            $message = ['text' => $posts];
-            return $this->handler->buildMessage($message);
+            return $this->buildPostsMessage();
         }
-        $message = [
-            'text' => 'Это твоя карманная библиотека, ты можешь отсюда просматривать и читать книги или статьи',
-            "message_type" => 'buttons',
-            "buttons" => [
-                'inline_keyboard' => [
-                    [
-                        [
-                            'text' => 'список книг',
-                            'callback_data' => json_encode(['command' => 'books_list', 'parent_command' => '/start'])
-                        ],
-                        [
-                            'text' => 'список статей',
-                            'callback_data' => json_encode(['command' => 'posts_list', 'parent_command' => '/start'])
-                        ]
-                    ]
-                ],
-            ]
-        ];
-        return $this->handler->buildMessage($message);
+
+        return $this->buildStartMessage();
     }
-
-    public function getBooks(): ?string
+    public function getBooks()
     {
         $books = Book::paginate(5);
 
-        $booksMessage = "*Список книг*\n";
-        foreach ($books as $book) {
-            $booksMessage .= "\n*Nазвание:* {$book->title}\n";
-            $booksMessage .= "*Автор:* {$book->author}\n";
-            $booksMessage .= "*Описание:* {$book->description}\n\n";
-        }
+        $booksMessage = $this->formatBooksMessage($books);
+        $keyboard = $this->generateBooksKeyboard($books);
 
         $booksMessage .= "Страница {$books->currentPage()} из {$books->lastPage()}";
+        $message = ["books" => $booksMessage, 'keyboard' => $keyboard];
+        return $message;
+    }
 
+    public function formatBooksMessage($books)
+    {
+        $booksMessage = "<b>Список книг</b>\n\n";
+        foreach ($books as $book) {
+            $booksMessage .= "<b>Название:</b>{$book->title}\n";
+            $booksMessage .= "<b>Автор:</b> {$book->author}\n";
+            $booksMessage .= "<a href=\"http://www.example.com\"><b>ссылка для скачивания</b></a>\n\n";
+        }
         return $booksMessage;
     }
 
+    public function generateBooksKeyboard($books)
+    {
+        $keyboard = ['inline_keyboard' => []];
+        foreach ($books as $book) {
+            $callbackData = json_encode(['book_id' => $book->id, 'command' => 'books_list', 'parent_command' => '/start']);
+            $keyboard['inline_keyboard'][] = [
+                [
+                    'text' => $book->title,
+                    'callback_data' => $callbackData,
+                ],
+            ];
+        }
+        return $keyboard;
+    }
     public function getPosts(): ?string
     {
         $posts = Post::paginate(5);
 
-        $postsMessage = "*Список постов*\n";
+        $postsMessage = "<b>Список постов</b>\n\n";
         foreach ($posts as $post) {
-            $postsMessage .= "\n*Nазвание:* {$post->title}\n";
-            $postsMessage .= "*Описание:* {$post->content}\n\n";
+            $pd = $post;
+            $postsMessage .= "<b>Название:</b> {$post->title}\n";
+            $postsMessage .= "<b>Автор:</b> {$post->user->name}\n";
+            $postsMessage .= "<a href=\"http://www.example.com\"><b>ссылка для скачивания</b></a>\n\n";
         }
         return $postsMessage .= "Страница {$posts->currentPage()} из {$posts->lastPage()}";;
+    }
+    public function buildStartMessage()
+    {
+        $test = $this->handler->keyboard_handler->buildButtons();
+        $buttons = [
+            [
+                ['text' => 'список книг', 'callback_data' => ['command' => 'books_list', 'parent_command' => '/start']],
+                ['text' => 'список статей', 'callback_data' => ['command' => 'posts_list', 'parent_command' => '/start']]
+            ]
+        ];
+        $message = [
+            'text' => 'Это твоя карманная библиотека, ты можешь отсюда просматривать и читать книги или статьи',
+            "message_type" => 'buttons',
+            "buttons" => $this->handler->keyboard_handler->buildInlineKeyboard($buttons),
+        ];
+
+        return $this->handler->buildMessage($message);
+    }
+    public function buildBooksMessage()
+    {
+        $books = $this->getBooks();
+        $message = [
+            'text' => $books['books'],
+            "message_type" => 'buttons',
+            'buttons' => $books['keyboard'],
+        ];
+        return $this->handler->buildMessage($message);
+    }
+    public function buildPostsMessage()
+    {
+        $posts = $this->getPosts();
+        $message = ['text' => $posts];
+        return $this->handler->buildMessage($message);
     }
 }

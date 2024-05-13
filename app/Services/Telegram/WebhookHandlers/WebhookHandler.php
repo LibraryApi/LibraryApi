@@ -3,21 +3,28 @@
 namespace App\Services\Telegram\WebhookHandlers;
 
 use App\Interfaces\Telegram\TelegramBot\Command\TelegramCommandInterface;
-use App\Interfaces\Telegram\TelegramBot\TelegramBotInterface;
 use App\Interfaces\Telegram\WebhookHandler\WebhookHandlerInterface;
+use App\Services\Telegram\WebhookHandlers\Keyboards\KeyboardsHandler;
 
 class WebhookHandler implements WebhookHandlerInterface
 {
     public array $request;
     public string $command_name;
     public ?string $parent_command_name;
+    public array $callback_query = [];
     protected ?int $chat_id = 0;
     protected array $bot_config;
+    public KeyboardsHandler $keyboard_handler;
 
+    public function __construct(KeyboardsHandler $keyboardHandler)
+    {
+        $this->keyboard_handler = $keyboardHandler;
+    }
     public function handle(array $request, array $botConfig): TelegramCommandInterface
     {
         $this->request = $request;
         $this->bot_config = $botConfig;
+        $this->setChatId();
 
         if ($this->isMyChatMember()) {
             return $this->handleMyChatMember($botConfig);
@@ -59,6 +66,8 @@ class WebhookHandler implements WebhookHandlerInterface
     protected function handleCallbackQuery(array $botConfig): TelegramCommandInterface
     {
         $this->setParentCommandName();
+        $this->setCallbackQuery();
+
         $command = $this->getParentCommandName();
         if (isset($botConfig['commands'][$command]))
             return new $botConfig['commands'][$command]($this->request, $this);
@@ -121,19 +130,30 @@ class WebhookHandler implements WebhookHandlerInterface
         return $entitiesType;
     }
 
-    public function getChatId(): mixed
+    public function setChatId(): void
     {
         if (isset($this->request['message'])) {
-            $chat_id = $this->request['message']['chat']['id'];
+            $this->chat_id = $this->request['message']['chat']['id'];
         }
 
         if (isset($this->request['callback_query'])) {
-            $chat_id = $this->request['callback_query']['message']['chat']['id'];
+            $this->chat_id = $this->request['callback_query']['message']['chat']['id'];
         }
-
-        return $chat_id;
     }
 
+    public function getChatId(): int
+    {
+        return $this->chat_id;
+    }
+    public function setCallbackQuery(): void
+    {
+        $this->callback_query = json_decode($this->request['callback_query']['data'], true);
+    }
+
+    public function getCallbackQuery(): array
+    {
+        return $this->callback_query;
+    }
     public function buildMessage(array $message): array
     {
         $defaults = [

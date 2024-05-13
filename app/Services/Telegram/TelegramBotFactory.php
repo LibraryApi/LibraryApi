@@ -10,13 +10,14 @@ use App\Services\Telegram\WebhookSenders\WebhookSender;
 use App\Services\Telegram\TelegramBots\TelegramAdminBot\TelegramAdminBot;
 use App\Services\Telegram\TelegramBots\TelegramApiBot\TelegramApiBot;
 use App\Services\Telegram\TelegramBots\TelegramNewsBot\TelegramNewsBot;
+use App\Services\Telegram\WebhookHandlers\Keyboards\KeyboardsHandler;
 
 class TelegramBotFactory
 {
 
-    public function createWebhookHandler(): WebhookHandlerInterface
+    public function createWebhookHandler($keyboardsHandler): WebhookHandlerInterface
     {
-        return new WebhookHandler();
+        return new WebhookHandler($keyboardsHandler);
     }
 
 
@@ -25,10 +26,18 @@ class TelegramBotFactory
         return new WebhookSender();
     }
 
+    public function createKeyboardsHandler()
+    {
+        return new KeyboardsHandler();
+    }
+
+
     public function createTelegramBot(string $botType): TelegramBotInterface
     {
-        $handler = $this->createWebhookHandler();
+        $keyboardsHandler = $this->createKeyboardsHandler();
+        $handler = $this->createWebhookHandler($keyboardsHandler);
         $sender = $this->createWebhookSender();
+
         if ($botType == TelegramAdminBot::BOT_TYPE) {
             return new TelegramAdminBot($handler, $sender);
         }
