@@ -26,6 +26,7 @@ class WebhookSender implements WebhookSenderInterface
             'https://api.telegram.org/bot' . $this->token . '/' . $this->send_method,
             $this->data
         )->json();
+        return;
     }
 
     public function createMessageSender(string $messageType = 'text'): WebhookSenderInterface
@@ -38,13 +39,13 @@ class WebhookSender implements WebhookSenderInterface
 
     public function setToken(string $botType): ?string
     {
-        if ($botType == 'LibraryApiBot') {
+        if ($botType == 'api') {
             $this->token = env('TELEGRAM_API_BOT_TOKEN');
         }
-        if ($botType == 'LibraryNewsBot') {
+        if ($botType == 'news') {
             $this->token = env('TELEGRAM_NEWS_BOT_TOKEN');
         }
-        if ($botType == 'LibraryAdminBot') {
+        if ($botType == 'admin') {
             $this->token = env('TELEGRAM_ADMIN_BOT_TOKEN');
         }
         return null;
