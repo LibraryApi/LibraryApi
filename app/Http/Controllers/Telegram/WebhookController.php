@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Telegram;
 
-use App\Facades\Telegram;
 use App\Http\Controllers\Controller;
 use App\Services\Telegram\TelegramBotFactory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\JsonResponse;
 
 class WebhookController extends Controller
 {
@@ -19,28 +19,70 @@ class WebhookController extends Controller
         $this->token = env('TELEGRAM_API_BOT_TOKEN');
         $this->domain = 'https://api.telegram.org/bot';
     }
-    public function setWebhook(Request $request): array
+
+
+    public function setWebhook(Request $request): JsonResponse
     {
         $url = $request->input('url');
+        if (empty($url)) {
+            return response()->json(['error' => 'Не указан URL'], 400);
+        }
 
         $urlParts = explode('/', $url);
-
         $method = end($urlParts);
-        if ($method == 'library_news') {
-            $token = env('TELEGRAM_NEWS_BOT_TOKEN');
+
+        $botConfig = config("telegram.bots.{$method}");
+
+        if ($botConfig == null) {
+            return response()->json(['error' => 'Неверное имя бота'], 400);
         }
 
-        if ($method == 'library_api') {
-            $token = env('TELEGRAM_API_BOT_TOKEN');
-        }
+        $token = $botConfig['token'];
+        $webhookUrl = $this->domain . $token . '/setWebhook';
 
-        if ($method == 'library_admin') {
-            $token = env('TELEGRAM_ADMIN_BOT_TOKEN');
-        }
-        $response = Http::post($this->domain . $token . '/setWebhook', [
+        $response = Http::post($webhookUrl, [
             "url" => $url,
-        ])->json();
-        return $response;
+        ]);
+
+        if ($response->failed()) {
+            return response()->json(['error' => 'Не удалось установить вебхук'], $response->status());
+        }
+
+        $responseData = $response->json();
+
+        if (!$responseData['ok']) {
+            return response()->json(['error' => 'Ошибка API Telegram: ' . $responseData['description']], 500);
+        }
+
+        Log::info('Вебхук успешно установлен для бота: ' . $method);
+
+        return $response->json();
+    }
+
+    public function LibraryApiHandler(Request $request): void
+    {
+        $this->send($request, 'api');
+    }
+
+    public function LibraryNewsHandler(Request $request): void
+    {
+        $this->send($request, 'news');
+    }
+
+    public function LibraryAdminHandler(Request $request): void
+    {
+        $this->send($request, 'admin');
+    }
+
+    public function send(Request $request, string $botType): void
+    {
+        Log::info('Webhook data:', $request->all());
+        $telegramBotFactory = new TelegramBotFactory();
+
+        $telegram = $telegramBotFactory->createTelegramBot($botType);
+        $message = $telegram->handle($request)->buildMessage();
+
+        $telegram->sendMessage($message);
     }
 
     public function deleteWebhook(): array
@@ -55,60 +97,5 @@ class WebhookController extends Controller
         $url = $this->domain . $this->token . '/getWebhookInfo';
         $response = Http::post($url, [])->json();
         return $response;
-    }
-
-    public function send(Request $request, string $botType): \Illuminate\Http\JsonResponse
-    {
-        Log::info('Webhook data:', $request->all());
-
-        $telegramBotFactory = new TelegramBotFactory();
-        $webhookHandler = $telegramBotFactory->createWebhookHandler($request, $botType);
-        $webhookSender = $telegramBotFactory->createWebhookSender();
-
-        $messageHandler = $webhookHandler->createMessageHandler();
-        if (is_array($messageHandler)) {
-            return response()->json(['status' => 'ok']);
-        }
-        $message = $messageHandler->handle();
-        $messageType = $message['message_type'];
-
-        $messageSendler = $webhookSender->createMessageSender($messageType);
-        $messageSendler->message($message)->sendMessage();
-
-        return response()->json(['status' => 'ok']);
-    }
-    public function LibraryApiHandler(Request $request): \Illuminate\Http\JsonResponse
-    {
-        $botType = 'LibraryApiBot';
-        return $this->send($request, $botType);
-    }
-
-    public function LibraryNewsHandler(Request $request): \Illuminate\Http\JsonResponse
-    {
-        $botType = 'LibraryNewsBot';
-        return $this->send($request, $botType);
-    }
-
-    public function LibraryAdminHandler(Request $request): \Illuminate\Http\JsonResponse
-    {
-
-        $botType = 'LibraryAdminBot';
-        return $this->send($request, $botType);
-
-        /* $data = $request->all();
-        $botType = 'LibraryAdminBot';
-        Log::info('Webhook data:', $data);
-        Telegram::setToken($botType);
-
-        $handlerClass = Telegram::handle($request);
-
-        if ($handlerClass) {
-
-            $handlerInstance = new $handlerClass($request);
-            $handlerInstance->setBotType($botType);
-            $handlerInstance->sendMessage();
-        }
-
-        return response()->json(['status' => 'ok']); */
     }
 }

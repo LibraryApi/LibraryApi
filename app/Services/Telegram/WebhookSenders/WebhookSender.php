@@ -2,7 +2,7 @@
 
 namespace App\Services\Telegram\WebhookSenders;
 
-use App\Interfaces\Telegram\WebhookSenderInterface;
+use App\Interfaces\Telegram\WebhookSender\WebhookSenderInterface;
 use App\Services\Telegram\WebhookSenders\Buttons\ButtonSender;
 use App\Services\Telegram\WebhookSenders\Documents\DocumentSender;
 use App\Services\Telegram\WebhookSenders\Texts\TextSender;
@@ -26,6 +26,7 @@ class WebhookSender implements WebhookSenderInterface
             'https://api.telegram.org/bot' . $this->token . '/' . $this->send_method,
             $this->data
         )->json();
+        return;
     }
 
     public function createMessageSender(string $messageType = 'text'): WebhookSenderInterface
@@ -36,18 +37,10 @@ class WebhookSender implements WebhookSenderInterface
         return new TextSender();
     }
 
-    public function setToken(string $botType): ?string
+    public function setToken(string $botType): void
     {
-        if ($botType == 'LibraryApiBot') {
-            $this->token = env('TELEGRAM_API_BOT_TOKEN');
-        }
-        if ($botType == 'LibraryNewsBot') {
-            $this->token = env('TELEGRAM_NEWS_BOT_TOKEN');
-        }
-        if ($botType == 'LibraryAdminBot') {
-            $this->token = env('TELEGRAM_ADMIN_BOT_TOKEN');
-        }
-        return null;
+        $botConfig = config("telegram.bots.{$botType}");
+        $this->token = $botConfig['token'];
     }
 
     public function message(array $message): self {

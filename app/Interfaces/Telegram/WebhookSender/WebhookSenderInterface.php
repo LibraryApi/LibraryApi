@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Interfaces\Telegram;
+namespace App\Interfaces\Telegram\WebhookSender;
 
 interface WebhookSenderInterface
 {
