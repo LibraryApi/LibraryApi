@@ -2,7 +2,7 @@
 
 namespace App\Services\Telegram\WebhookSenders;
 
-use App\Interfaces\Telegram\WebhookSenderInterface;
+use App\Interfaces\Telegram\WebhookSender\WebhookSenderInterface;
 use App\Services\Telegram\WebhookSenders\Buttons\ButtonSender;
 use App\Services\Telegram\WebhookSenders\Documents\DocumentSender;
 use App\Services\Telegram\WebhookSenders\Texts\TextSender;

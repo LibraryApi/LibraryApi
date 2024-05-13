@@ -58,7 +58,7 @@ class WebhookController extends Controller
         $this->send($request, 'admin');
     }
 
-    public function send(Request $request, $botType)
+    public function send(Request $request,string $botType)
     {
         Log::info('Webhook data:', $request->all());
         $telegramBotFactory = new TelegramBotFactory();

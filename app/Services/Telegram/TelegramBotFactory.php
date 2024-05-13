@@ -2,22 +2,21 @@
 
 namespace App\Services\Telegram;
 
-use App\Interfaces\Telegram\TelegramBotFactoryInterface;
-use App\Interfaces\Telegram\WebhookHandlerInterface;
-use App\Interfaces\Telegram\WebhookSenderInterface;
+use App\Interfaces\Telegram\TelegramBot\TelegramBotInterface;
+use App\Interfaces\Telegram\WebhookHandler\WebhookHandlerInterface;
+use App\Interfaces\Telegram\WebhookSender\WebhookSenderInterface;
 use App\Services\Telegram\WebhookHandlers\WebhookHandler;
-use App\Services\Telegram\WebhookHandlers\Handler;
 use App\Services\Telegram\WebhookSenders\WebhookSender;
-use Illuminate\Http\Request;
 use App\Services\Telegram\TelegramBots\TelegramAdminBot\TelegramAdminBot;
 use App\Services\Telegram\TelegramBots\TelegramApiBot\TelegramApiBot;
 use App\Services\Telegram\TelegramBots\TelegramNewsBot\TelegramNewsBot;
+
 class TelegramBotFactory
 {
 
-    public function createWebhookHandler(Request $request, string $botType): WebhookHandlerInterface
+    public function createWebhookHandler(): WebhookHandlerInterface
     {
-        return new WebhookHandler($request, $botType);
+        return new WebhookHandler();
     }
 
 
@@ -26,20 +25,21 @@ class TelegramBotFactory
         return new WebhookSender();
     }
 
-    public function createTelegramBot($botType)
+    public function createTelegramBot(string $botType): TelegramBotInterface
     {
-        $handler = new Handler();
-        $sender = new WebhookSender();
-        if ($botType == "admin") {
+        $handler = $this->createWebhookHandler();
+        $sender = $this->createWebhookSender();
+        if ($botType == TelegramAdminBot::BOT_TYPE) {
             return new TelegramAdminBot($handler, $sender);
         }
 
-        if ($botType == 'news') {
+        if ($botType == TelegramNewsBot::BOT_TYPE) {
             return new TelegramNewsBot($handler, $sender);
         }
 
-        if ($botType == 'api') {
+        if ($botType == TelegramApiBot::BOT_TYPE) {
             return new TelegramApiBot($handler, $sender);
         }
+        return new TelegramAdminBot($handler, $sender);
     }
 }
