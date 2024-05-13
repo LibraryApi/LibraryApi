@@ -2,7 +2,9 @@
 
 namespace App\Services\Telegram\TelegramBots\TelegramApiBot\BotCommands;
 
-class HelpCommand
+use App\Interfaces\Telegram\TelegramBot\Command\TelegramCommandInterface;
+
+class HelpCommand implements TelegramCommandInterface
 {
     public $request;
     public $handler;

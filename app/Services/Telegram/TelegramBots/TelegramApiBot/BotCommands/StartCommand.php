@@ -2,13 +2,14 @@
 
 namespace App\Services\Telegram\TelegramBots\TelegramApiBot\BotCommands;
 
+use App\Interfaces\Telegram\TelegramBot\Command\TelegramCommandInterface;
 use App\Models\Book;
 use App\Models\Post;
 use App\Services\Telegram\TelegramBots\TelegramApiBot\TelegramApiBot;
 use App\Services\Telegram\WebhookHandlers\WebhookHandler;
 use Illuminate\Http\Request;
 
-class StartCommand extends TelegramApiBot
+class StartCommand extends TelegramApiBot implements TelegramCommandInterface
 {
     public $request;
     public $handler;

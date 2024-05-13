@@ -37,18 +37,10 @@ class WebhookSender implements WebhookSenderInterface
         return new TextSender();
     }
 
-    public function setToken(string $botType): ?string
+    public function setToken(string $botType): void
     {
-        if ($botType == 'api') {
-            $this->token = env('TELEGRAM_API_BOT_TOKEN');
-        }
-        if ($botType == 'news') {
-            $this->token = env('TELEGRAM_NEWS_BOT_TOKEN');
-        }
-        if ($botType == 'admin') {
-            $this->token = env('TELEGRAM_ADMIN_BOT_TOKEN');
-        }
-        return null;
+        $botConfig = config("telegram.bots.{$botType}");
+        $this->token = $botConfig['token'];
     }
 
     public function message(array $message): self {
