@@ -43,8 +43,8 @@ class BookController extends Controller
 
         $books = BookResource::collection($books);
 
-        $telegram = $this->telegram->createMessageSender('document');
-        $telegram->message(["caption" => "отчет за апрель", "document" => Storage::get('/public/file.png'), "filename" => "отчет.doc"])->sendMessage();
+        /* $telegram = $this->telegram->createMessageSender('document');
+        $telegram->message(["caption" => "отчет за апрель", "document" => Storage::get('/public/file.png'), "filename" => "отчет.doc"])->sendMessage(); */
 
         return response()->json($books);
     }
@@ -94,8 +94,8 @@ class BookController extends Controller
 
         $user = auth()->user();
 
-        $telegram = $this->telegram->createMessageSender();
-        $telegram->message(['text' => "Пользователь {$user->name} открыл книгу \"{$book->title}\""])->sendMessage();
+        /* $telegram = $this->telegram->createMessageSender();
+        $telegram->message(['text' => "Пользователь {$user->name} открыл книгу \"{$book->title}\""])->sendMessage(); */
 
         return response()->json($book);
     }

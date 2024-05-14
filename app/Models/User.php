@@ -63,6 +63,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Book::class);
     }
+
+    public function subscription()
+    {
+        return $this->hasOne(Subscription::class);
+    }
+
     /* public function hasRole(string $role)
     {
         return $this->roles->contains('name', $role);
