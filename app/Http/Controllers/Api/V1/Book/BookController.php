@@ -38,15 +38,19 @@ class BookController extends Controller
             });
         }
 
-        $perPage = $request->input('per_page', 10);
-        $books = $query->paginate($perPage);
-
-        $books = BookResource::collection($books);
-
         /* $telegram = $this->telegram->createMessageSender('document');
         $telegram->message(["caption" => "отчет за апрель", "document" => Storage::get('/public/file.png'), "filename" => "отчет.doc"])->sendMessage(); */
 
-        return response()->json($books);
+        $perPage = $request->input('per_page', 3);
+        $books = $query->paginate($perPage);
+        
+        return response()->json([
+            'total_books' => $books->total(),
+            'per_page' => $books->perPage(),
+            'current_page' => $books->currentPage(),
+            'last_page' => $books->lastPage(),
+            'books' => BookResource::collection($books->items()),
+        ]);
     }
 
     public function store(StoreBookRequest $request): \Illuminate\Http\JsonResponse
@@ -126,12 +130,13 @@ class BookController extends Controller
     {
         $book = Book::find($bookId);
 
+
         if (!$book) {
             return response()->json(['error' => 'Книга не найдена'], 404);
         }
 
         $this->authorize('delete', $book);
-        $book->delete();
+        //$book->delete();
 
         return response()->json(['message' => 'Книга успешно удалена!'], 200);
     }

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Events\UserRegistered;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
@@ -13,7 +12,6 @@ use App\Services\RoleService;
 
 class AuthController extends Controller
 {
-
     protected $roleService;
 
     public function __construct(RoleService $roleService)
@@ -32,30 +30,25 @@ class AuthController extends Controller
         $this->roleService->assignRoleToUser($user, USER::ROLE_READER);
 
         $token = $user->createToken('auth_token')->plainTextToken;
-        $success = ["user" => $user->name, "token" => $token];
-
         event(new UserRegistered($user));
-        
-        return response()->json(['success' => $success, 'message' => 'Пользователь успешно зарегистрирован']);
+
+        $test = $this->respondWithToken($token, $user->name, 'Пользователь успешно зарегистрирован');
+        return $test;
     }
 
     public function login(LoginRequest $request): \Illuminate\Http\JsonResponse
     {
+
+        $t = $request->input();
         if (auth()->attempt($request->validated())) {
             $user = User::where('email', $request->email)->first();
-
-            if ($user->tokens->where('name', 'auth_token')->first()) {
+            $token = $user->tokens->where('name', 'auth_token')->first();
+            if ($token) {
                 return response()->json(['message' => 'Пользователь уже авторизован'], 409);
             }
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            return response()->json([
-                'success' => [
-                    'name' => $user->name,
-                    'token' => $token,
-                ],
-                'message' => 'Пользователь успешно авторизован'
-            ]);
+            return $this->respondWithToken($token, $user->name, 'Пользователь успешно авторизован');
         }
 
         return response()->json(['error' => 'Не удалось аутентифицировать пользователя. Неверный логин или пароль.'], 401);
@@ -64,16 +57,16 @@ class AuthController extends Controller
     public function logout(): \Illuminate\Http\JsonResponse
     {
         $user = User::find(auth()->id());
-
+        
         if ($user) {
-
             $user->tokens()->delete();
-
-            return response()->json(['message' => 'Вы успешно вышли из аккаунта'], 200);
+            return response()->json(['message' => 'Вы успешно вышли из аккаунта'], 200)
+                ->cookie('auth_token', '', 0); // Устанавливаем время жизни куки на ноль, чтобы удалить куки на стороне клиента
         }
 
         return response()->json(['error' => 'Пользователь не найден'], 404);
     }
+
 
     public function getUser(): \Illuminate\Http\JsonResponse
     {
@@ -94,22 +87,16 @@ class AuthController extends Controller
         return $this->respondWithToken($token);
     }
 
-    /* Принимает токен и форматирует JSON-ответ с данными о токене.
-    Включает токен, тип токена, и время его истечения.
-    Используется для обработки ответов в методах login и refreshToken. */
-
-    protected function respondWithToken(string $token): \Illuminate\Http\JsonResponse
+    protected function respondWithToken(string $token, string $userName = null, string $message = null): \Illuminate\Http\JsonResponse
     {
-        $user = auth('sanctum')->user();
+        $cookie = cookie('auth_token', $token, config('sanctum.expiration'), null, null, false, true, false, 'Lax');
 
-        if ($user) {
-            return response()->json([
-                'access_token' => $token,
-                'token_type' => 'Bearer',
-                'expires_in' => now()->addMinutes(config('sanctum.expiration'))->diffInSeconds(),
-            ]);
-        }
-
-        return response()->json(['error' => 'Пользователь не найден'], 404);
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'expires_in' => now()->addMinutes(config('sanctum.expiration'))->diffInSeconds(),
+            'user' => $userName,
+            'message' => $message
+        ])->withCookie($cookie);
     }
 }

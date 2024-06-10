@@ -17,12 +17,34 @@ use App\Models\User;
 class PostController extends Controller
 {
 
-    public function index()
+    public function index(Request $request): \Illuminate\Http\JsonResponse
     {
+        $query = Post::query()->with(["user", "comments"]);
 
-        $posts = PostResource::collection(Post::with(["user", "comments"])->paginate(10));
-        return response()->json($posts);
+        if ($request->has('author')) {
+            $query->whereHas('user', function ($userQuery) use ($request) {
+                $userQuery->where('name', $request->input('author'));
+            });
+        }
+
+        if ($request->has('category')) {
+            $query->whereHas('categories', function ($categoryQuery) use ($request) {
+                $categoryQuery->where('name', $request->input('category'));
+            });
+        }
+
+        $perPage = $request->input('per_page', 10);
+        $posts = $query->paginate($perPage);
+
+        return response()->json([
+            'total_posts' => $posts->total(),
+            'per_page' => $posts->perPage(),
+            'current_page' => $posts->currentPage(),
+            'last_page' => $posts->lastPage(),
+            'posts' => PostResource::collection($posts->items()),
+        ]);
     }
+
 
 
     public function store(StorePostRequest $request)

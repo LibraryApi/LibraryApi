@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Facades\Telegram;
 use App\Services\Subscription\SubscriptionServiceInterface;
 use App\Services\SubscriptionService\SubscriptionService;
+use App\Services\Telegram\TelegramBotFactory;
 use App\Services\TelegramService\TelegramFactory;
 use Illuminate\Support\ServiceProvider;
 use App\Services\RoleService;
@@ -22,7 +23,7 @@ class AppServiceProvider extends ServiceProvider
             return new RoleService();
         });
 
-        $this->app->bind(SubscriptionServiceInterface::class, SubscriptionService::class);
+        $this->app->bind(\App\Interfaces\Subscription\SubscriptionServiceInterface::class, SubscriptionService::class);
     }
 
     /**
@@ -31,11 +32,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(Request $request): void
     {
         $this->app->bind(Telegram::class, function(){
-            return new TelegramFactory();
-        });
-
-        $this->app->bind(TelegramWebhook::class, function() {
-            return new TelegramWebhook();
+            return new TelegramBotFactory();
         });
     }
 }

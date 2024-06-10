@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Books;
 
 use App\Http\Resources\UserResource;
+use App\Models\Book;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 

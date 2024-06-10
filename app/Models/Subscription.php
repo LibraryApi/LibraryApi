@@ -11,19 +11,27 @@ class Subscription extends Model
 
     public const ACCESS_BASE = 'base';
     public const ACCESS_PREMIUM = 'premium';
-    public const DURATION_MONTH = 'month';
-    public const DURATION_YEARS = 'years';
 
     protected $fillable = [
         'name',
         'price',
-        'duration',
+        'duration_months',
         'access_level',
-        'user_id'
     ];
 
-    public function user()
+    public function users()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsToMany(User::class, 'user_subscriptions')
+            ->withPivot('start_date', 'end_date')
+            ->withTimestamps();
+    }
+
+    public static function findBySubscriptionData($name, $price, $durationMonths, $accessLevel)
+    {
+        return self::where('name', $name)
+            ->where('price', $price)
+            ->where('duration_months', $durationMonths)
+            ->where('access_level', $accessLevel)
+            ->first();
     }
 }

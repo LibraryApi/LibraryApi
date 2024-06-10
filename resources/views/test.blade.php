@@ -1,27 +1,36 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CSS example</title>
-    <link rel="stylesheet" href="{{ asset('css/test.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Каталог книг</title>
+    <!-- Подключение Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-<section class="section">
     <div class="container">
-        <div class="columns">
-            <div class="column">
-                <div class="card">
-                    <div class="header">
-                        <h1>1</h1>
-                    </div>
-                    <div class="container">
-                        <p>April 30, 2023</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <h1>Каталог книг</h1>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Автор</th>
+                    <th>Цена</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{$book->title}}</td>
+                    <td>{{$book->user->name}}</td>
+                    <td>{{$book->price}}</td>
+                    <td>
+                        <a href={{ route('books.pay') }} class="btn btn-primary">Купить</a>
+                    </td>
+                </tr>
+                <!-- Другие книги -->
+            </tbody>
+        </table>
     </div>
-</section>
 </body>
 </html>
