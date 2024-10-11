@@ -2,118 +2,72 @@
 
 namespace App\Http\Controllers\Api\V1\Book;
 
+use App\DTO\Book\ChapterDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Book\StoreChapterRequest;
 use App\Http\Requests\Book\UpdateChapterRequest;
 use App\Http\Resources\Books\ChapterResource;
-use App\Models\Chapter;
-use App\Models\Book;
+use App\Services\Wrappers\Book\ChapterService;
+use Exception;
 
 class ChapterController extends Controller
 {
+    protected ChapterService $chapterService;
+
+    public function __construct(ChapterService $chapterService)
+    {
+        $this->chapterService = $chapterService;
+    }
+
     public function index($bookId)
     {
-        $book = Book::find($bookId);
-
-        if (!$book) {
-            return response()->json(['error' => 'Книга не найдена'], 404);
+        try {
+            $chapters = $this->chapterService->getChapters($bookId);
+            return response()->json(ChapterResource::collection($chapters));
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 404);
         }
-        if (!$book->chapters) {
-            return response()->json(['error' => 'у книги еще нет глав'], 404);
-        }
-
-        $chapters = ChapterResource::collection($book->chapters);
-
-        return response()->json($chapters);
     }
 
     public function show($bookId, $chapterId)
     {
-        $book = Book::find($bookId);
-        if (!$book) {
-            return response()->json(['error' => 'Книга не найдена'], 404);
+        try {
+            $chapter = $this->chapterService->getChapter($bookId, $chapterId);
+            return response()->json(new ChapterResource($chapter));
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 404);
         }
-
-        $chapter = $book->chapters()->find($chapterId);
-        if (!$chapter) {
-            return response()->json(['error' => 'Глава не найдена'], 404);
-        }
-        $chapter = new ChapterResource($chapter);
-        return response()->json($chapter);
     }
 
     public function store(StoreChapterRequest $request, $bookId)
     {
-        $data = $request->validated();
-
-        $book = Book::find($bookId);
-
-        if (!$book) {
-            return response()->json(['error' => 'Книга не найдена'], 404);
+        try {
+            $chapterDTO = new ChapterDTO($request->validated());
+            $chapter = $this->chapterService->createChapter($bookId, $chapterDTO);
+            return response()->json(new ChapterResource($chapter), 201);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 404);
         }
-
-        $this->authorize('create', Chapter::class);
-
-        $chapter = new Chapter([
-            'title' => $data['title'],
-            'content' => $data['content'],
-            'number' => $data['number'] ?? null,
-            'duration' => $data['duration'] ?? null,
-            'characters' => $data['characters'] ?? null,
-            'images' => $data['images'] ?? null,
-            'comments_count' => 0,
-            'likes_count' => 0,
-            'views_count' => 0,
-        ]);
-
-        $book->chapters()->save($chapter);
-
-        $chapter = new ChapterResource($chapter);
-
-        return response()->json($chapter, 201);
     }
 
-    public function update(UpdateChapterRequest $request, $bookId, $chapterId): \Illuminate\Http\JsonResponse
+    public function update(UpdateChapterRequest $request, $bookId, $chapterId)
     {
-        $data = $request->validated();
-
-        $book = Book::find($bookId);
-
-        if (!$book) {
-            return response()->json(['error' => 'Книга не найдена'], 404);
+        try {
+            $chapterDTO = new ChapterDTO($request->validated());
+            $chapter = $this->chapterService->updateChapter($bookId, $chapterId, $chapterDTO);
+            return response()->json(new ChapterResource($chapter), 200);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 404);
         }
-
-        $chapter = $book->chapters()->find($chapterId);
-
-        if (!$chapter) {
-            return response()->json(['error' => 'Глава не найдена'], 404);
-        }
-
-        $this->authorize('update', $chapter);
-
-        $chapter->update($data);
-        $chapter = new ChapterResource($chapter);
-
-        return response()->json($chapter, 200);
     }
 
-    public function destroy($bookId, $chapterId): \Illuminate\Http\JsonResponse
+    public function destroy($bookId, $chapterId)
     {
-        $book = Book::find($bookId);
-
-        if (!$book) {
-            return response()->json(['error' => 'Книга не найдена'], 404);
+        try {
+            $this->chapterService->deleteChapter($bookId, $chapterId);
+            return response()->json(['message' => 'Глава успешно удалена!'], 200);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 404);
         }
-
-        $chapter = $book->chapters()->find($chapterId);
-
-        if (!$chapter) {
-            return response()->json(['error' => 'Глава не найдена'], 404);
-        }
-
-        $this->authorize('delete', $chapter);
-        $chapter->delete();
-
-        return response()->json(['message' => 'Глава успешно удалена!'], 200);
     }
 }
