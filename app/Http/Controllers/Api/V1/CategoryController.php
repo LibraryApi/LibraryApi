@@ -2,71 +2,54 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Models\Category;
+use App\DTO\CategoryDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Category\StoreCategoryRequest;
 use App\Http\Requests\Category\UpdateCategoryRequest;
 use App\Http\Resources\CategoryResource;
+use App\Services\Wrappers\CategoryService;
+use Illuminate\Http\JsonResponse;
 
 class CategoryController extends Controller
 {
-    public function index(): \Illuminate\Http\JsonResponse
-    {
-        $categories = Category::all();
-        if($categories->isEmpty()){
-            return response()->json(['error' => 'категорий не найдено'], 404);
-        }
+    protected CategoryService $categoryService;
 
-        $categories = CategoryResource::collection($categories);
-        return response()->json($categories);
+    public function __construct(CategoryService $categoryService)
+    {
+        $this->categoryService = $categoryService;
     }
 
-    public function store(StoreCategoryRequest $request): \Illuminate\Http\JsonResponse
+    public function index(): JsonResponse
     {
-        $data = $request->validated();
-
-        $this->authorize('create', Category::class);
-        $category = Category::create($data);
-
-        $category = new CategoryResource($category);
-        return response()->json($category, 201);
+        $categories = $this->categoryService->getAllCategories();
+        return response()->json(CategoryResource::collection($categories));
     }
 
-    public function show($categoryId): \Illuminate\Http\JsonResponse
+    public function store(StoreCategoryRequest $request): JsonResponse
     {
-        $category = Category::find($categoryId);
-        if(!$category){
-            return response()->json(['error' => 'категория не найдена'], 404);
-        }
-        $category = new CategoryResource($category);
-        return response()->json($category);
+        $categoryDTO = new CategoryDTO($request->validated());
+        $category = $this->categoryService->createCategory($categoryDTO);
+
+        return response()->json(new CategoryResource($category), 201);
     }
 
-    public function update(UpdateCategoryRequest $request, $categoryId): \Illuminate\Http\JsonResponse
+    public function show($categoryId): JsonResponse
     {
-        $category = Category::find($categoryId);
-        if(!$category){
-            return response()->json(['error' => 'категория не найдена'], 404);
-        }
-        $data = $request->validated();
-
-        $this->authorize('update', $category);
-        $category->update($data);
-
-        $category = new CategoryResource($category);
-        return response()->json($category, 200);
+        $category = $this->categoryService->getCategory($categoryId);
+        return response()->json(new CategoryResource($category));
     }
 
-    public function destroy(string $categoryId): \Illuminate\Http\JsonResponse
+    public function update(UpdateCategoryRequest $request, $categoryId): JsonResponse
     {
-        $category = Category::find($categoryId);
-        if(!$category){
-            return response()->json(['error' => 'категория не найдена'], 404);
-        }
-        $this->authorize('delete', $category);
-        $category->delete();
+        $categoryDTO = new CategoryDTO($request->validated());
+        $category = $this->categoryService->updateCategory($categoryId, $categoryDTO);
 
+        return response()->json(new CategoryResource($category), 200);
+    }
+
+    public function destroy($categoryId): JsonResponse
+    {
+        $this->categoryService->deleteCategory($categoryId);
         return response()->json(['message' => 'Категория успешно удалена'], 200);
     }
 }
-
