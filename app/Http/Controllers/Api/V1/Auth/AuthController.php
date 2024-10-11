@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api\V1\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\LoginRequest;
-use App\Services\Api\V1\AuthService;
+use App\DTO\Auth\RegisterDTO;
+use App\DTO\Auth\LoginDTO;
+use App\Services\Wrappers\AuthService;
 
 class AuthController extends Controller
 {
@@ -18,14 +20,16 @@ class AuthController extends Controller
 
     public function register(RegisterRequest $request): \Illuminate\Http\JsonResponse
     {
-        $success = $this->authService->register($request->validated());
+        $registerDTO = RegisterDTO::fromRequest($request->validated());
+        $success = $this->authService->register($registerDTO);
 
         return response()->json(['success' => $success, 'message' => 'Пользователь успешно зарегистрирован']);
     }
 
     public function login(LoginRequest $request): \Illuminate\Http\JsonResponse
     {
-        $success = $this->authService->login($request->validated());
+        $loginDTO = LoginDTO::fromRequest($request->validated());
+        $success = $this->authService->login($loginDTO);
 
         if (!$success) {
             return response()->json(['message' => 'Пользователь уже авторизован'], 409);
