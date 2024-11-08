@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Books;
 
+use App\Http\Resources\ImageResource;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -21,6 +22,7 @@ class BookResource extends JsonResource
             'author' => $this->author,
             'description' => $this->description,
             "user_id" => new UserResource($this->whenLoaded('user')),
+            "images" => ImageResource::collection($this->images),
             'cover_image' => $this->cover_image,
             'author_bio' => $this->author_bio,
             'language' => $this->language,

@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Post\StorePostRequest;
 use App\Http\Requests\Post\UpdatePostRequest;
 use App\Http\Resources\PostResource;
-use App\Models\Post;
+use Illuminate\Http\Request;
 use App\Services\Wrappers\PostService;
 use Illuminate\Http\JsonResponse;
 
@@ -20,10 +20,21 @@ class PostController extends Controller
         $this->postService = $postService;
     }
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $posts = $this->postService->index();
-        return response()->json(PostResource::collection($posts));
+        $posts = $this->postService->index($request->input('per_page', 10), $request->all());
+
+        $posts = PostResource::collection($posts);
+
+        return response()->json([
+            'posts' => $posts,
+            'meta' => [
+                'total_posts' => $posts->total(),
+                'per_page' => $request->input('per_page', 10),
+                'current_page' => $posts->currentPage(),
+                'last_page' => $posts->lastPage(),
+            ],
+        ]);
     }
 
     public function store(StorePostRequest $request): JsonResponse

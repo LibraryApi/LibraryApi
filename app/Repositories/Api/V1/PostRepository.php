@@ -7,9 +7,25 @@ use App\Models\Post;
 
 class PostRepository
 {
-    public function all()
+    public function allAndSort($perPage, $filters = [])
     {
-        return Post::with(['user', 'comments'])->paginate(10);
+        $posts = Post::with(["user", "comments", "images"]);
+
+        if ($filters['search']) {
+            $posts = $posts->where('title', 'like', '%' . trim($filters['search']) . '%');
+        }
+
+        if ($filters['sortName']) {
+            $sortOrder = $filters['sortName'] === 'name_asc' ? 'asc' : 'desc';
+            $posts = $posts->orderBy('title', $sortOrder);
+        }
+
+        if ($filters['sortDate']) {
+            $sortOrder = $filters['sortDate'] === 'date_asc' ? 'asc' : 'desc';
+            $posts = $posts->orderBy('created_at', $sortOrder);
+        }
+
+        return $posts->paginate($perPage);
     }
 
     public function find($id)

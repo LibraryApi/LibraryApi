@@ -25,6 +25,7 @@ class CommentResource extends JsonResource
             "author" => new UserResource($this->whenLoaded('user')),
             'commentable_type' => $this->commentable_type,
             'commentable' => $this->commentableData(),
+            'children' => CommentResource::collection($this->whenLoaded('children'))
         ];
     }
 

@@ -64,6 +64,11 @@ class User extends Authenticatable
         return $this->hasMany(Book::class);
     }
 
+    public function images()
+    {
+        return $this->hasMany(Image::class, 'imagetable_id');
+    }
+
     public function subscription()
     {
         return $this->hasOne(Subscription::class);

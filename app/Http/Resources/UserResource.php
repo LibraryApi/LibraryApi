@@ -15,11 +15,12 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return [  
+        return [
             "id"=> $this->id,
             "name" => $this->name,
             "email"=> $this->email,
             "posts" => PostResource::collection($this->whenLoaded('posts')),
+            "images" => ImageResource::collection($this->images),
             "created_at" => $this->created_at,
         ];
     }

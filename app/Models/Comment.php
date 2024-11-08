@@ -13,11 +13,18 @@ class Comment extends Model
         'content',
         'user_id',
         'commentable_id',
-        'commentable_type'
+        'commentable_type',
+        'commentable_type',
+        'parent_id'
     ];
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function children()
+    {
+        return $this->hasMany(Comment::class, 'parent_id');
     }
 
     public function commentable()

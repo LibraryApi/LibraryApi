@@ -30,6 +30,11 @@ class Book extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function images()
+    {
+        return $this->hasMany(Image::class, 'imagetable_id');
+    }
+
     public function posts()
     {
         return $this->hasMany(Post::class);
@@ -44,7 +49,7 @@ class Book extends Model
     {
         return $this->belongsToMany(Category::class);
     }
-    
+
     public function getAuthorNameAttribute()
     {
         return $this->user->name;

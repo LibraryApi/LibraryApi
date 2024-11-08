@@ -9,6 +9,7 @@ use App\Http\Requests\Comment\UpdateCommentRequest;
 use App\Http\Resources\Comments\CommentResource;
 use App\Services\Wrappers\CommentService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class CommentController extends Controller
 {
@@ -19,9 +20,9 @@ class CommentController extends Controller
         $this->commentService = $commentService;
     }
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $comments = $this->commentService->getAllComments();
+        $comments = $this->commentService->getAllComments($request);
         return response()->json(CommentResource::collection($comments));
     }
 
@@ -47,7 +48,7 @@ class CommentController extends Controller
     {
         $commentDTO = new CommentDTO($request->validated());
         $comment = $this->commentService->getComment($id);
-        
+
         $this->commentService->updateComment($comment, $commentDTO);
 
         return response()->json(['message' => 'Комментарий успешно обновлен'], 200);

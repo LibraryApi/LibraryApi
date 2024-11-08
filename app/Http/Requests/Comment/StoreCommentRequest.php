@@ -14,7 +14,8 @@ class StoreCommentRequest extends FormRequest
         return [
             'content' => 'required|string',
             'commentable_id' => 'required|int',
-            'commentable_type'=> 'required|string'
+            'commentable_type'=> 'required|string',
+            'parent_id' => 'required|int',
         ];
     }
 

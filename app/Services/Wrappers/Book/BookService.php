@@ -21,9 +21,9 @@ class BookService
         $this->roleService = $roleService;
     }
 
-    public function getAllBooks($perPage, $filters)
+    public function getAllBooksAndSort($perPage, $filters)
     {
-        return $this->bookRepository->all($perPage, $filters);
+        return $this->bookRepository->getAllBooksAndSort($perPage, $filters);
     }
 
     public function getBook(string $bookId): Book

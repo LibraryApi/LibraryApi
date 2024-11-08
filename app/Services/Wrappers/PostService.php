@@ -18,9 +18,9 @@ class PostService
         $this->postRepository = $postRepository;
     }
 
-    public function index()
+    public function index($perPage, $filters)
     {
-        return $this->postRepository->all();
+        return $this->postRepository->allAndSort($perPage, $filters);
     }
 
     public function store(PostDTO $postDTO)
@@ -32,6 +32,7 @@ class PostService
         Gate::authorize('create', Post::class);
 
         $post = $this->postRepository->create($postDTO, Auth::id());
+
         return $post;
     }
 

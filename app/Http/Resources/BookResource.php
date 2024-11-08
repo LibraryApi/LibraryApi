@@ -16,10 +16,11 @@ class BookResource extends JsonResource
 
     public function toArray(Request $request): array
     {
-        return [  
+        return [
             "id"=> $this->id,
             "title"=> $this->title,
             "author" => new UserResource($this->whenLoaded('user')),
+            "images" => ImageResource::collection($this->images),
             "description" => $this->description,
             "created_at" => $this->created_at,
         ];

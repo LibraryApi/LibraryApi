@@ -17,9 +17,9 @@ class CommentService
         $this->commentRepository = $commentRepository;
     }
 
-    public function getAllComments()
+    public function getAllComments($request)
     {
-        return $this->commentRepository->all();
+        return $this->commentRepository->all($request);
     }
 
     public function getComment(int $id): Comment
@@ -40,15 +40,14 @@ class CommentService
             'user_id' => $commentDTO->user_id,
             'commentable_id' => $commentDTO->commentable_id,
             'commentable_type' => $commentDTO->commentable_type,
+            'parent_id' => $commentDTO->parent_id,
         ];
 
         $comment = new Comment($commentData);
 
         Gate::authorize('createComment', $comment);
 
-        $this->commentRepository->create($commentData);
-
-        return $comment;
+        return $this->commentRepository->create($commentData);
     }
 
     public function updateComment(Comment $comment, CommentDTO $commentDTO)

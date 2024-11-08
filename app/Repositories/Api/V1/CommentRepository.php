@@ -6,9 +6,14 @@ use App\Models\Comment;
 
 class CommentRepository
 {
-    public function all()
+    public function all($request)
     {
-        return Comment::with('user', 'commentable')->get();
+        $data = $request->all();
+
+        return Comment::with(['user', 'commentable', 'children.children.user', 'children.user'])
+            ->where('commentable_type', $data['commentableType'])
+            ->where('commentable_id', $data['commentableId'])
+            ->get();
     }
 
     public function find(int $id): ?Comment

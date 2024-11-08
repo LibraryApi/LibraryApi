@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Book\StoreBookRequest;
 use App\Http\Requests\Book\UpdateBookRequest;
 use App\Http\Resources\Books\BookResource;
+use App\Models\Category;
 use App\Services\Wrappers\Book\BookService;
 use Illuminate\Http\Request;
 use Exception;
@@ -22,8 +23,20 @@ class BookController extends Controller
 
     public function index(Request $request): \Illuminate\Http\JsonResponse
     {
-        $books = $this->bookService->getAllBooks($request->input('per_page', 10), $request->all());
-        return response()->json(BookResource::collection($books));
+        $books = $this->bookService->getAllBooksAndSort($request->input('per_page', 10), $request->all());
+        $books = BookResource::collection($books);
+        $category = (new Category())->get();
+
+        return response()->json([
+            'books' => $books,
+            'category' => $category,
+            'meta' => [
+                'total_books' => $books->total(),
+                'per_page' => $request->input('per_page', 10),
+                'current_page' => $books->currentPage(),
+                'last_page' => $books->lastPage(),
+            ],
+        ]);
     }
 
     public function store(StoreBookRequest $request): \Illuminate\Http\JsonResponse

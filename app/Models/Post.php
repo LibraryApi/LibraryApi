@@ -25,6 +25,11 @@ class Post extends Model
         return $this->morphMany(Comment::class, 'commentable');
     }
 
+    public function images()
+    {
+        return $this->hasMany(Image::class, 'imagetable_id');
+    }
+
     public function book()
     {
         return $this->belongsTo(Book::class, 'book_id');

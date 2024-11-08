@@ -21,9 +21,7 @@ class UserController extends Controller
     public function index(): JsonResponse
     {
         $users = $this->userService->getAllUsers();
-        $usersResource = UserResource::collection($users);
-
-        return response()->json($usersResource);
+        return response()->json(UserResource::collection($users));
     }
 
     public function show(string $id): JsonResponse
@@ -44,6 +42,17 @@ class UserController extends Controller
         $updatedUser = $this->userService->updateUser($userDTO);
 
         return response()->json(['message' => 'Данные пользователя успешно обновлены', 'user' => new UserResource($updatedUser)]);
+    }
+
+    public function getUserWithToken(): \Illuminate\Http\JsonResponse
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Пользователь не найден или токен недействителен'], 404);
+        }
+
+        return response()->json(new UserResource($user), 200);
     }
 
     public function destroy(string $id): JsonResponse

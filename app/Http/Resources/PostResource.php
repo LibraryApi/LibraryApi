@@ -20,9 +20,10 @@ class PostResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return [  
+        return [
             "id"=> $this->id,
             "user" => new UserResource(User::findOrFail($this->user_id)),
+            "images" => ImageResource::collection($this->images),
             'comments' => $this->commentsData(),
             "title" => $this->title,
             "content" => $this->content,
@@ -35,5 +36,5 @@ class PostResource extends JsonResource
     {
         return new CommentResource(Comment::where('commentable_type', 'post')->where('commentable_id', $this->id)->first());
     }
-    
+
 }
