@@ -10,10 +10,13 @@ class CommentRepository
     {
         $data = $request->all();
 
-        return Comment::with(['user', 'commentable', 'children.children.user', 'children.user'])
+        $comments = Comment::with(['user', 'children.user', 'commentable', 'parent.author'])
             ->where('commentable_type', $data['commentableType'])
             ->where('commentable_id', $data['commentableId'])
+            ->whereNull('parent_id')
             ->get();
+
+        return $comments;
     }
 
     public function find(int $id): ?Comment
