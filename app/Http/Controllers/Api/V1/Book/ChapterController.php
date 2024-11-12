@@ -42,6 +42,7 @@ class ChapterController extends Controller
         return response()->json($chapter);
     }
 
+    /* TODO исправить ошибку с добавлением главы */
     public function store(StoreChapterRequest $request, $bookId)
     {
         $data = $request->validated();

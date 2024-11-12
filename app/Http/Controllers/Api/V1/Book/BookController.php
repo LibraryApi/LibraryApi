@@ -136,7 +136,7 @@ class BookController extends Controller
         }
 
         $this->authorize('delete', $book);
-        //$book->delete();
+        $book->delete();
 
         return response()->json(['message' => 'Книга успешно удалена!'], 200);
     }

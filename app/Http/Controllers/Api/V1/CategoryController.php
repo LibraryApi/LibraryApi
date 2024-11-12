@@ -12,6 +12,7 @@ class CategoryController extends Controller
 {
     public function index(): \Illuminate\Http\JsonResponse
     {
+        // TODO добавить пагинацию и фильтрацию
         $categories = Category::all();
         if($categories->isEmpty()){
             return response()->json(['error' => 'категорий не найдено'], 404);

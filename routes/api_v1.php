@@ -57,12 +57,12 @@ Route::prefix('/bot')->group(function () {
 Route::prefix('subscriptions')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/user', [SubscriptionController::class, 'userSubscriptions']);
-        Route::get('/', [SubscriptionController::class, 'index']); //  все подписки
-        Route::post('/', [SubscriptionController::class, 'storeSubscription']); //  создания подписки
-        Route::patch('/{id}', [SubscriptionController::class, 'update']);
-        Route::delete('/{id}', [SubscriptionController::class, 'destroy']); //  удаления подписки
-        Route::post('/subscribe/{subscriptionId}', [SubscriptionController::class, 'subscribe']);
-        Route::delete('/unsubscribe/{subscriptionId}', [SubscriptionController::class, 'unsubscribe']);
+        Route::get('/', [SubscriptionController::class, 'getAllSubscriptions']); //  все подписки
+        Route::post('/', [SubscriptionController::class, 'storeSubscription']); //  создание подписки
+        Route::patch('/{id}', [SubscriptionController::class, 'updateSubscription']); // обновление подписки
+        Route::delete('/{id}', [SubscriptionController::class, 'destroySubscription']); //  удаление подписки
+        Route::post('/subscribe/{subscriptionId}', [SubscriptionController::class, 'subscribeToSubscription']); // оформление подписки
+        Route::delete('/unsubscribe/{subscriptionId}', [SubscriptionController::class, 'unsubscribeFromSubscription']); // отмена подписки
     });
-    Route::post('payments/webhook', [SubscriptionController::class, 'paymentsWebhook']);
+    Route::post('payments/webhook', [SubscriptionController::class, 'paymentsWebhook']); // получаем уведомление от платежной системы (успешно или нет)
 });

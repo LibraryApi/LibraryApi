@@ -21,8 +21,9 @@ class SubscriptionResource extends JsonResource
             'price' => $this->price,
             'duration_months' => $this->duration_months,
             'access_level' => $this->access_level,
-            'start_date' => $this->pivot->start_date,
-            'end_date' => $this->pivot->end_date,
+            'created_at' => $this->created_at,
+            //'start_date' => $this->pivot->start_date,
+           // 'end_date' => $this->pivot->end_date,
         ];
     }
 }

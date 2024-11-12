@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             PostSeeder::class,
             CommentSeeder::class,
             CategorySeeder::class,
+            SubscriptionSeeder::class,
             
         ]);
         /* $book = Book::factory()->count(10)->create();

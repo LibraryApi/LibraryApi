@@ -8,7 +8,42 @@ use App\Models\Subscription;
 
 class SubscriptionService implements SubscriptionServiceInterface
 {
-    public function subscribe(User $user, int $subscriptionId)
+    public function getAllSubscriptions()
+    {
+        return Subscription::all();
+    }
+
+    public function getUserSubscriptions(User $user)
+    {
+        return $user->subscriptions;
+    }
+
+    public function storeSubscription($subscriptionData)
+    {
+        return Subscription::create($subscriptionData);
+    }
+
+    public function updateSubscription(Subscription $subscription, $data)
+    {
+        $subscription->update($data);
+        return $subscription;
+    }
+
+    public function deleteSubscription(Subscription $subscription)
+    {
+        if (!$subscription) {
+            throw new \Exception('Подписка не найдена');
+        }
+
+        try {
+            $subscription->delete();
+        } catch (\Exception $e) {
+            throw new \Exception('Ошибка при удалении подписки: ' . $e->getMessage());
+        }
+    }
+
+
+    public function subscribeToSubscription(User $user, int $subscriptionId)
     {
         $subscription = $this->getSubscription($subscriptionId);
 
@@ -45,12 +80,12 @@ class SubscriptionService implements SubscriptionServiceInterface
         return ['success' => true, 'message' => 'Подписка успешно оформлена', 'subscription' => $subscription, 'status' => 200];
     }
 
-    public function unsubscribe(User $user)
+    public function unsubscribeFromSubscription(User $user)
     {
         $subscription = $user->subscriptions()->first();
 
         if (!$subscription) {
-            return ['success' => false, 'message' => 'Подписка не найдена', 'status' => 404];
+            return ['success' => false, 'message' => 'У пользователя нет больше оформленных подписок', 'status' => 404];
         }
 
         $user->subscriptions()->detach($subscription->id);
@@ -64,11 +99,6 @@ class SubscriptionService implements SubscriptionServiceInterface
         if ($subscription) {
             return $subscription;
         }
-        return ['success' => false, 'message' => 'Подписка не найдена', 'status' => 404];
-    }
-
-    public function getUserSubscriptions(User $user)
-    {
-        return $user->subscriptions;
+        return ['success' => false, 'message' => 'Подписки не найдены', 'status' => 404];
     }
 }

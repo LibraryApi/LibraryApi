@@ -46,7 +46,7 @@ class PostController extends Controller
     }
 
 
-
+    
     public function store(StorePostRequest $request)
     {
         if ($request->filled('book_id')) {
