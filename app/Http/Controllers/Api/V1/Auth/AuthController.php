@@ -30,7 +30,7 @@ class AuthController extends Controller
         $this->roleService->assignRoleToUser($user, USER::ROLE_READER);
 
         $token = $user->createToken('auth_token')->plainTextToken;
-        event(new UserRegistered($user));
+        //event(new UserRegistered($user));
 
         $test = $this->respondWithToken($token, $user->name, 'Пользователь успешно зарегистрирован');
         return $test;
@@ -42,10 +42,7 @@ class AuthController extends Controller
         $t = $request->input();
         if (auth()->attempt($request->validated())) {
             $user = User::where('email', $request->email)->first();
-            $token = $user->tokens->where('name', 'auth_token')->first();
-            if ($token) {
-                return response()->json(['message' => 'Пользователь уже авторизован'], 409);
-            }
+
             $token = $user->createToken('auth_token')->plainTextToken;
 
             return $this->respondWithToken($token, $user->name, 'Пользователь успешно авторизован');
@@ -57,16 +54,18 @@ class AuthController extends Controller
     public function logout(): \Illuminate\Http\JsonResponse
     {
         $user = User::find(auth()->id());
-        
+
         if ($user) {
-            $user->tokens()->delete();
+            auth()->user()->tokens->where('id', auth()->user()->currentAccessToken()->id)->each(function ($token) {
+                $token->delete();
+            });
+
             return response()->json(['message' => 'Вы успешно вышли из аккаунта'], 200)
-                ->cookie('auth_token', '', 0); // Устанавливаем время жизни куки на ноль, чтобы удалить куки на стороне клиента
+                ->cookie('auth_token', '', 0);
         }
 
         return response()->json(['error' => 'Пользователь не найден'], 404);
     }
-
 
     public function getUser(): \Illuminate\Http\JsonResponse
     {
@@ -81,7 +80,10 @@ class AuthController extends Controller
             return response()->json(['error' => 'Пользователь не найден'], 404);
         }
 
-        $user->tokens()->delete();
+        auth()->user()->tokens->where('id', auth()->user()->currentAccessToken()->id)->each(function ($token) {
+            $token->delete();
+        });
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return $this->respondWithToken($token);
