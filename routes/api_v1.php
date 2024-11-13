@@ -49,9 +49,9 @@ Route::prefix('/bot')->group(function () {
     Route::delete('/webhook', [WebhookController::class, 'deleteWebhook']);
     Route::get('/webhook', [WebhookController::class, 'getWebhookInfo']);
 
-    Route::post('/library_api', [WebhookController::class, 'LibraryApiHandler']);
-    Route::post('/library_news', [WebhookController::class, 'LibraryNewsHandler']);
-    Route::post('/library_admin', [WebhookController::class, 'LibraryAdminHandler']);
+    Route::post('/api', [WebhookController::class, 'LibraryApiHandler']);
+    Route::post('/news', [WebhookController::class, 'LibraryNewsHandler']);
+    Route::post('/admin', [WebhookController::class, 'LibraryAdminHandler']);
 });
 
 Route::prefix('subscriptions')->group(function () {
