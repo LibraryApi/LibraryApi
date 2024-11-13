@@ -30,22 +30,27 @@ class AuthController extends Controller
         $this->roleService->assignRoleToUser($user, USER::ROLE_READER);
 
         $token = $user->createToken('auth_token')->plainTextToken;
-        //event(new UserRegistered($user));
+        $success = ["user" => $user->name, "token" => $token];
 
-        $test = $this->respondWithToken($token, $user->name, 'Пользователь успешно зарегистрирован');
-        return $test;
+        event(new UserRegistered($user));
+
+        return response()->json(['success' => $success, 'message' => 'Пользователь успешно зарегистрирован']);
     }
 
     public function login(LoginRequest $request): \Illuminate\Http\JsonResponse
     {
-
-        $t = $request->input();
         if (auth()->attempt($request->validated())) {
             $user = User::where('email', $request->email)->first();
 
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            return $this->respondWithToken($token, $user->name, 'Пользователь успешно авторизован');
+            return response()->json([
+                'success' => [
+                    'name' => $user->name,
+                    'token' => $token,
+                ],
+                'message' => 'Пользователь успешно авторизован'
+            ]);
         }
 
         return response()->json(['error' => 'Не удалось аутентифицировать пользователя. Неверный логин или пароль.'], 401);
@@ -55,15 +60,13 @@ class AuthController extends Controller
     {
         $user = User::find(auth()->id());
 
-        if ($user) {
-            auth()->user()->tokens->where('id', auth()->user()->currentAccessToken()->id)->each(function ($token) {
-                $token->delete();
-            });
+        $token = request()->bearerToken();
 
-            return response()->json(['message' => 'Вы успешно вышли из аккаунта'], 200)
-                ->cookie('auth_token', '', 0);
+        if ($token) {
+            $user->tokens()->where('token', $token)->delete();
+
+            return response()->json(['message' => 'Вы успешно вышли из аккаунта'], 200);
         }
-
         return response()->json(['error' => 'Пользователь не найден'], 404);
     }
 
@@ -87,18 +90,5 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return $this->respondWithToken($token);
-    }
-
-    protected function respondWithToken(string $token, string $userName = null, string $message = null): \Illuminate\Http\JsonResponse
-    {
-        $cookie = cookie('auth_token', $token, config('sanctum.expiration'), null, null, false, true, false, 'Lax');
-
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'expires_in' => now()->addMinutes(config('sanctum.expiration'))->diffInSeconds(),
-            'user' => $userName,
-            'message' => $message
-        ])->withCookie($cookie);
     }
 }
