@@ -32,7 +32,7 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
         $success = ["user" => $user->name, "token" => $token];
 
-        event(new UserRegistered($user));
+        //event(new UserRegistered($user));
 
         return response()->json(['success' => $success, 'message' => 'Пользователь успешно зарегистрирован']);
     }
@@ -63,7 +63,9 @@ class AuthController extends Controller
         $token = request()->bearerToken();
 
         if ($token) {
-            $user->tokens()->where('token', $token)->delete();
+            auth()->user()->tokens->where('id', auth()->user()->currentAccessToken()->id)->each(function ($token) {
+                $token->delete();
+            });
 
             return response()->json(['message' => 'Вы успешно вышли из аккаунта'], 200);
         }
