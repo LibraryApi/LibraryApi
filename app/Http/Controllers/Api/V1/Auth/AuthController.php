@@ -91,4 +91,19 @@ class AuthController extends Controller
 
         return $this->respondWithToken($token);
     }
+
+    protected function respondWithToken(string $token): \Illuminate\Http\JsonResponse
+    {
+        $user = auth('sanctum')->user();
+
+        if ($user) {
+            return response()->json([
+                'access_token' => $token,
+                'token_type' => 'Bearer',
+                'expires_in' => now()->addMinutes(config('sanctum.expiration'))->diffInSeconds(),
+            ]);
+        }
+
+        return response()->json(['error' => 'Пользователь не найден'], 404);
+    }
 }
