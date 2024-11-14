@@ -21,7 +21,7 @@ class WebhookController extends Controller
     }
 
 
-    public function setWebhook(Request $request): JsonResponse
+    public function setWebhook(Request $request)
     {
         $url = $request->input('url');
         if (empty($url)) {
