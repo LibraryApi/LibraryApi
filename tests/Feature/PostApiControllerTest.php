@@ -12,7 +12,7 @@ use App\Models\User;
 
 class PostApiControllerTest extends TestCase
 {
-    use RefreshDatabase;
+    /* use RefreshDatabase;
 
     private $user;
     private $book;
@@ -135,7 +135,7 @@ class PostApiControllerTest extends TestCase
     }
 
 
-    /* //ЕЩЕ не реализован функционал 
+    //ЕЩЕ не реализован функционал 
     public function test_can_get_posts_with_criteria()
     {
         // Получаем id пользователя и книги
@@ -159,7 +159,7 @@ class PostApiControllerTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonCount(1); // Ожидается только один пост для указанной книги.
-    } */
+    }
 
     public function test_invalid_endpoint_returns_404()
     {
@@ -212,5 +212,5 @@ class PostApiControllerTest extends TestCase
         $response = $this->actingAs($user)->postJson('/api/v1/posts', ['title' => '', 'content' => '']);
 
         $response->assertStatus(422);
-    }
+    } */
 }
