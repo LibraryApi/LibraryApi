@@ -9,32 +9,31 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use App\Services\RoleService;
+use App\Services\Application\Auth\AuthService;
+use Illuminate\Http\JsonResponse;
 
 class AuthController extends Controller
 {
-    protected $roleService;
+    private $roleService;
+    private $authService;
 
-    public function __construct(RoleService $roleService)
+    public function __construct(RoleService $roleService, AuthService $authService)
     {
         $this->roleService = $roleService;
+        $this->authService = $authService;
     }
 
-    public function register(RegisterRequest $request): \Illuminate\Http\JsonResponse
+    public function register(RegisterRequest $request): JsonResponse
     {
-        $user = User::create([
-            'name' => $request->input('name'),
-            'email' => $request->input('email'),
-            'password' => Hash::make($request->input('password')),
-        ]);
+        $data = $this->authService->register($request->validated());
 
-        $this->roleService->assignRoleToUser($user, USER::ROLE_READER);
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-        $success = ["user" => $user->name, "token" => $token];
-
-        //event(new UserRegistered($user));
-
-        return response()->json(['success' => $success, 'message' => 'Пользователь успешно зарегистрирован']);
+        return response()->json([
+            'success' => [
+                'user' => $data['user']->name,
+                'token' => $data['token'],
+            ],
+            'message' => __('auth.auth.register_success'),
+        ], 201);
     }
 
     public function login(LoginRequest $request): \Illuminate\Http\JsonResponse

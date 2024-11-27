@@ -48,7 +48,7 @@ class SubscriptionController extends Controller
         $subscriptionResult = $this->subscriptionService->storeSubscription($request->all());
 
         return response()->json([
-            'message' => __('messages.subscription_created'),
+            'message' => __('subscription.subscription_created'),
             'data' => new SubscriptionResource($subscriptionResult)
         ], 201);
     }
@@ -61,7 +61,7 @@ class SubscriptionController extends Controller
     {
         $updatedSubscription = $this->subscriptionService->updateSubscription($subscription, $request->all());
 
-        return response()->json(['message' => __('messages.subscription_updated')], 200);
+        return response()->json(['message' => __('subscription.subscription_updated')], 200);
     }
 
     /**
@@ -72,11 +72,11 @@ class SubscriptionController extends Controller
         try {
             $subscription = Subscription::find($subscriptionId);
             if (!$subscription) {
-                return response()->json(['message' => __('messages.subscription_not_found')], 404);
+                return response()->json(['message' => __('subscription.subscription_not_found')], 404);
             }
             $this->subscriptionService->deleteSubscription($subscription);
 
-            return response()->json(['message' => __('messages.subscription_deleted')], 200);
+            return response()->json(['message' => __('subscription.subscription_deleted')], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => $e->getMessage()
