@@ -2,109 +2,83 @@
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
-use App\Events\UserRegistered;
+use App\DTO\Auth\LoginUserDTO;
+use App\DTO\Auth\RegisterUserDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\LoginRequest;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use App\Services\RoleService;
 use App\Services\Application\Auth\AuthService;
 use Illuminate\Http\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
 {
-    private $roleService;
     private $authService;
 
-    public function __construct(RoleService $roleService, AuthService $authService)
+    public function __construct(AuthService $authService)
     {
-        $this->roleService = $roleService;
         $this->authService = $authService;
     }
 
     public function register(RegisterRequest $request): JsonResponse
     {
-        $data = $this->authService->register($request->validated());
+        $userDTO = RegisterUserDTO::fromRequest($request->validated());
+
+        $status = $this->authService->register($userDTO);
+
+        if (!$status) {
+            return response()->json(['message' => __('auth/auth.registration.failed')], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return response()->json(['message' => __('auth/auth.register_success')], Response::HTTP_CREATED);
+    }
+
+    public function login(LoginRequest $request): JsonResponse
+    {
+        $userDTO = LoginUserDTO::fromRequest($request->validated());
+        $result = $this->authService->login($userDTO);
+
+        if (!$result) {
+            return response()->json(['message' => __('auth/auth.invalid_credentials')], Response::HTTP_UNAUTHORIZED);
+        }
 
         return response()->json([
-            'success' => [
-                'user' => $data['user']->name,
-                'token' => $data['token'],
-            ],
-            'message' => __('auth.auth.register_success'),
-        ], 201);
+            'user' => $result['user']->only('name', 'email'),
+            'token' => $result['token'],
+            'message' => __('auth/auth.login_success'),
+        ], Response::HTTP_OK);
     }
 
-    public function login(LoginRequest $request): \Illuminate\Http\JsonResponse
+    public function logout(): JsonResponse
     {
-        if (auth()->attempt($request->validated())) {
-            $user = User::where('email', $request->email)->first();
+        $this->authService->logout();
 
-            $token = $user->createToken('auth_token')->plainTextToken;
-
-            return response()->json([
-                'success' => [
-                    'name' => $user->name,
-                    'token' => $token,
-                ],
-                'message' => 'Пользователь успешно авторизован'
-            ]);
-        }
-
-        return response()->json(['error' => 'Не удалось аутентифицировать пользователя. Неверный логин или пароль.'], 401);
+        return response()->json(['message' => __('auth/auth.logout_success')], Response::HTTP_OK);
     }
 
-    public function logout(): \Illuminate\Http\JsonResponse
+    public function getUser(): JsonResponse
     {
-        $user = User::find(auth()->id());
-
-        $token = request()->bearerToken();
-
-        if ($token) {
-            auth()->user()->tokens->where('id', auth()->user()->currentAccessToken()->id)->each(function ($token) {
-                $token->delete();
-            });
-
-            return response()->json(['message' => 'Вы успешно вышли из аккаунта'], 200);
-        }
-        return response()->json(['error' => 'Пользователь не найден'], 404);
-    }
-
-    public function getUser(): \Illuminate\Http\JsonResponse
-    {
-        return response()->json(auth()->user());
-    }
-
-    public function refreshToken(): \Illuminate\Http\JsonResponse
-    {
-        $user = User::find(auth()->id());
+        $user = $this->authService->getUser();
 
         if (!$user) {
-            return response()->json(['error' => 'Пользователь не найден'], 404);
+            return response()->json(['message' => __('auth/auth.user_not_found')], Response::HTTP_NOT_FOUND);
         }
 
-        auth()->user()->tokens->where('id', auth()->user()->currentAccessToken()->id)->each(function ($token) {
-            $token->delete();
-        });
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return $this->respondWithToken($token);
+        return response()->json($user, Response::HTTP_OK);
     }
 
-    protected function respondWithToken(string $token): \Illuminate\Http\JsonResponse
+    public function refreshToken(): JsonResponse
     {
-        $user = auth('sanctum')->user();
+        $token = $this->authService->refreshToken();
 
-        if ($user) {
-            return response()->json([
-                'access_token' => $token,
-                'token_type' => 'Bearer',
-                'expires_in' => now()->addMinutes(config('sanctum.expiration'))->diffInSeconds(),
-            ]);
+        if (!$token) {
+            return response()->json(['message' => __('auth/auth.user_not_found')], Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(['error' => 'Пользователь не найден'], 404);
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'expires_in' => now()->addMinutes(config('sanctum.expiration'))->diffInSeconds(),
+        ], Response::HTTP_OK);
     }
 }
