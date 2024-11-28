@@ -4,7 +4,7 @@ namespace App\Services\Application\Auth;
 use App\DTO\Auth\LoginUserDTO;
 use App\DTO\Auth\RegisterUserDTO;
 use App\Models\User;
-use App\Services\RoleService;
+use App\Services\WrapperServices\RoleService;
 use Illuminate\Support\Facades\Hash;
 
 class AuthService

@@ -7,6 +7,7 @@ use App\DTO\Auth\RegisterUserDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Resources\UserResource;
 use App\Services\Application\Auth\AuthService;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -64,7 +65,7 @@ class AuthController extends Controller
             return response()->json(['message' => __('auth/auth.user_not_found')], Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json($user, Response::HTTP_OK);
+        return response()->json(new UserResource($user), Response::HTTP_OK);
     }
 
     public function refreshToken(): JsonResponse

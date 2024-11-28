@@ -3,14 +3,13 @@
 namespace App\Providers;
 
 use App\Facades\Telegram;
-use App\Interfaces\Subscription\SubscriptionServiceInterface as SubscriptionSubscriptionServiceInterface;
+use App\Interfaces\Subscription\SubscriptionServiceInterface;
 use App\Repositories\User\UserRepository;
-use App\Services\Subscription\SubscriptionServiceInterface;
-use App\Services\SubscriptionService\SubscriptionService;
-use App\Services\Telegram\TelegramBotFactory;
+use App\Services\Application\Subscription\SubscriptionService;
+use App\Services\WrapperServices\Telegram\TelegramBotFactory;
 use App\Services\TelegramService\TelegramFactory;
 use Illuminate\Support\ServiceProvider;
-use App\Services\RoleService;
+use App\Services\WrapperServices\RoleService;
 use App\Services\TelegramService\Webhook\TelegramWebhook;
 use Illuminate\Http\Request;
 
@@ -25,11 +24,7 @@ class AppServiceProvider extends ServiceProvider
             return new RoleService();
         });
 
-        $this->app->bind(UserRepository::class, function ($app) {
-            return new UserRepository();
-        });
-
-        $this->app->bind(SubscriptionSubscriptionServiceInterface::class, SubscriptionService::class);
+        $this->app->bind(SubscriptionServiceInterface::class, SubscriptionService::class);
     }
 
     /**

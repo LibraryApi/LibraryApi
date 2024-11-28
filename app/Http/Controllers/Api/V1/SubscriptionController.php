@@ -7,7 +7,7 @@ use App\Http\Requests\Subscription\SubscriptionRequest;
 use App\Http\Resources\SubscriptionResource;
 use App\Interfaces\Subscription\SubscriptionServiceInterface;
 use App\Models\Subscription;
-use App\Services\PaymentService\PaymentService;
+use App\Services\WrapperServices\PaymentService\PaymentService;
 use Illuminate\Http\Request;
 
 class SubscriptionController extends Controller
@@ -126,7 +126,7 @@ class SubscriptionController extends Controller
      */
     public function successPayment(Request $request, $paymentId)
     {
-        $url = "https://api.yookassa.ru/v3/payments/{$paymantId}/capture";
+        $url = "https://api.yookassa.ru/v3/payments/{$paymentId}/capture";
         // TO DO: Обработать успешный платеж.
     }
 
@@ -135,7 +135,7 @@ class SubscriptionController extends Controller
      */
     public function cancelPayment(Request $request, $paymentId)
     {
-        $url = "https://api.yookassa.ru/v3/payments/{$paymantId}/cancel";
+        $url = "https://api.yookassa.ru/v3/payments/{$paymentId}/cancel";
         // TO DO: Обработать отмену платежа.
     }
 

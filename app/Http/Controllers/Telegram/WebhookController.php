@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Telegram;
 
 use App\Http\Controllers\Controller;
-use App\Services\Telegram\TelegramBotFactory;
+use App\Services\WrapperServices\Telegram\TelegramBotFactory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
