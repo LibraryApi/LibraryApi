@@ -17,7 +17,6 @@ class RegisterUserDTO
         $dto->name = $data['name'];
         $dto->email = $data['email'];
         $dto->password = $data['password'];
-
         return $dto;
     }
 }
