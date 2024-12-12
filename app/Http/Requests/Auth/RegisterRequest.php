@@ -38,7 +38,7 @@ class RegisterRequest extends FormRequest
 
             'email.required' => 'Вы должны указать свой email',
             'email.email' => 'Введите валидный Email',
-            'email.unique' => 'Это поле должо быть уникальным',
+            'email.unique' => 'Пользователь с такой почтой уже существует',
             'email.min' => 'Минимальное колличество символов должно быть 10',
             'email.max' => 'Максимальное колличество символов должно быть 50',
 

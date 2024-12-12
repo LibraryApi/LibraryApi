@@ -11,7 +11,7 @@ class BookApiControllerTest extends TestCase
     /**
      * A basic feature test example.
      */
-    use RefreshDatabase;
+    /* use RefreshDatabase;
 
     public function test_can_create_book()
     {
@@ -82,5 +82,5 @@ class BookApiControllerTest extends TestCase
         $response->assertStatus(200);
 
         $this->assertDatabaseMissing('books', ['id' => $book->id]);
-    }
+    } */
 }

@@ -6,10 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Book\StoreBookRequest;
 use App\Http\Requests\Book\UpdateBookRequest;
 use App\Http\Resources\Books\BookResource;
-use App\Services\RoleService;
+use App\Services\WrapperServices\RoleService;
 use App\Models\Book;
 use App\Models\User;
-use App\Services\Telegram\WebhookSenders\WebhookSender;
+use App\Services\WrapperServices\Telegram\WebhookSenders\WebhookSender;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -28,22 +28,37 @@ class BookController extends Controller
     public function index(Request $request): \Illuminate\Http\JsonResponse
     {
         $query = Book::query();
-        if ($request->has('author')) {
+
+        // Фильтр по автору
+        if ($request->filled('author')) {
             $query->where('author', $request->input('author'));
         }
 
-        if ($request->has('category')) {
+        // Фильтр по категории
+        if ($request->filled('category')) {
             $query->whereHas('categories', function ($categoryQuery) use ($request) {
                 $categoryQuery->where('name', $request->input('category'));
             });
         }
 
-        /* $telegram = $this->telegram->createMessageSender('document');
-        $telegram->message(["caption" => "отчет за апрель", "document" => Storage::get('/public/file.png'), "filename" => "отчет.doc"])->sendMessage(); */
+        // Фильтр по поисковому запросу
+        if ($request->filled('search')) {
+            $query->where('title', 'like', '%' . $request->input('search') . '%')
+                ->orWhere('description', 'like', '%' . $request->input('search') . '%');
+        }
+
+        // Сортировка
+        if ($request->filled('sortDate')) {
+            $query->orderBy('created_at', $request->input('sortDate') === 'asc' ? 'asc' : 'desc');
+        }
+
+        if ($request->filled('sortName')) {
+            $query->orderBy('title', $request->input('sortName') === 'asc' ? 'asc' : 'desc');
+        }
 
         $perPage = $request->input('per_page', 3);
         $books = $query->paginate($perPage);
-        
+
         return response()->json([
             'total_books' => $books->total(),
             'per_page' => $books->perPage(),
@@ -52,6 +67,7 @@ class BookController extends Controller
             'books' => BookResource::collection($books->items()),
         ]);
     }
+
 
     public function store(StoreBookRequest $request): \Illuminate\Http\JsonResponse
     {

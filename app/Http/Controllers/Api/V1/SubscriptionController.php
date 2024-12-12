@@ -7,7 +7,7 @@ use App\Http\Requests\Subscription\SubscriptionRequest;
 use App\Http\Resources\SubscriptionResource;
 use App\Interfaces\Subscription\SubscriptionServiceInterface;
 use App\Models\Subscription;
-use App\Services\PaymentService\PaymentService;
+use App\Services\WrapperServices\PaymentService\PaymentService;
 use Illuminate\Http\Request;
 
 class SubscriptionController extends Controller
@@ -48,7 +48,7 @@ class SubscriptionController extends Controller
         $subscriptionResult = $this->subscriptionService->storeSubscription($request->all());
 
         return response()->json([
-            'message' => __('messages.subscription_created'),
+            'message' => __('subscription.subscription_created'),
             'data' => new SubscriptionResource($subscriptionResult)
         ], 201);
     }
@@ -61,7 +61,7 @@ class SubscriptionController extends Controller
     {
         $updatedSubscription = $this->subscriptionService->updateSubscription($subscription, $request->all());
 
-        return response()->json(['message' => __('messages.subscription_updated')], 200);
+        return response()->json(['message' => __('subscription.subscription_updated')], 200);
     }
 
     /**
@@ -72,11 +72,11 @@ class SubscriptionController extends Controller
         try {
             $subscription = Subscription::find($subscriptionId);
             if (!$subscription) {
-                return response()->json(['message' => __('messages.subscription_not_found')], 404);
+                return response()->json(['message' => __('subscription.subscription_not_found')], 404);
             }
             $this->subscriptionService->deleteSubscription($subscription);
 
-            return response()->json(['message' => __('messages.subscription_deleted')], 200);
+            return response()->json(['message' => __('subscription.subscription_deleted')], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => $e->getMessage()
@@ -126,7 +126,7 @@ class SubscriptionController extends Controller
      */
     public function successPayment(Request $request, $paymentId)
     {
-        $url = "https://api.yookassa.ru/v3/payments/{$paymantId}/capture";
+        $url = "https://api.yookassa.ru/v3/payments/{$paymentId}/capture";
         // TO DO: Обработать успешный платеж.
     }
 
@@ -135,7 +135,7 @@ class SubscriptionController extends Controller
      */
     public function cancelPayment(Request $request, $paymentId)
     {
-        $url = "https://api.yookassa.ru/v3/payments/{$paymantId}/cancel";
+        $url = "https://api.yookassa.ru/v3/payments/{$paymentId}/cancel";
         // TO DO: Обработать отмену платежа.
     }
 
