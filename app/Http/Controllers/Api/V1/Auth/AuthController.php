@@ -25,13 +25,15 @@ class AuthController extends Controller
     {
         $userDTO = RegisterUserDTO::fromRequest($request->validated());
 
-        $status = $this->authService->register($userDTO);
+        $token = $this->authService->register($userDTO);
 
-        if (!$status) {
+        if (!$token) {
             return response()->json(['message' => __('auth/auth.registration.failed')], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return response()->json(['message' => __('auth/auth.register_success')], Response::HTTP_CREATED);
+        return response()->json([
+            'token' => $token,
+            'message' => __('auth/auth.register_success')], Response::HTTP_CREATED);
     }
 
     public function login(LoginRequest $request): JsonResponse

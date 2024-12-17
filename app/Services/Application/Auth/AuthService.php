@@ -13,7 +13,7 @@ class AuthService
         private RoleService $roleService
     ) {}
 
-    public function register(RegisterUserDTO $data): bool
+    public function register(RegisterUserDTO $data): ?string
     {
 
         $user = User::create([
@@ -26,7 +26,7 @@ class AuthService
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        return true;
+        return $token;
     }
 
     public function login(LoginUserDTO $data): ?array
