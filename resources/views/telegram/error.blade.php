@@ -7,5 +7,5 @@
 <b>Строка:</b> <i>{{$e->getLine()}}</i>
 
 @if(Auth::user())
-Пользователь: {{Auth::user()->name()}}
+Пользователь: {{auth()->user()->name()}}
 @endif
