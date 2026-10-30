@@ -27,6 +27,16 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'avatar',
+        'banner_image',
+        'birth_date',
+        'city',
+        'telegram',
+        'phone',
+        'github',
+        'vk',
+        'habr',
+        'about',
     ];
 
     /**
@@ -46,6 +56,7 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'birth_date' => 'date',
         'password' => 'hashed',
     ];
 
@@ -62,6 +73,66 @@ class User extends Authenticatable
     public function books()
     {
         return $this->hasMany(Book::class);
+    }
+
+    public function likes()
+    {
+        return $this->hasMany(Like::class);
+    }
+
+    public function ratings()
+    {
+        return $this->hasMany(Rating::class);
+    }
+
+    public function followers()
+    {
+        return $this->belongsToMany(User::class, 'follows', 'following_id', 'follower_id')
+            ->withTimestamps();
+    }
+
+    public function following()
+    {
+        return $this->belongsToMany(User::class, 'follows', 'follower_id', 'following_id')
+            ->withTimestamps();
+    }
+
+    public function likedPosts()
+    {
+        return $this->belongsToMany(Post::class, 'likes', 'user_id', 'likeable_id')
+            ->where('likes.likeable_type', (new Post())->getMorphClass())
+            ->withTimestamps();
+    }
+
+    public function isFollowing(User $user): bool
+    {
+        return $this->following()->where('users.id', $user->id)->exists();
+    }
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if (!$this->avatar) {
+            return null;
+        }
+
+        if (str_starts_with($this->avatar, 'http://') || str_starts_with($this->avatar, 'https://')) {
+            return $this->avatar;
+        }
+
+        return url($this->avatar);
+    }
+
+    public function getBannerUrlAttribute(): ?string
+    {
+        if (!$this->banner_image) {
+            return null;
+        }
+
+        if (str_starts_with($this->banner_image, 'http://') || str_starts_with($this->banner_image, 'https://')) {
+            return $this->banner_image;
+        }
+
+        return url($this->banner_image);
     }
 
     public function subscriptions()
