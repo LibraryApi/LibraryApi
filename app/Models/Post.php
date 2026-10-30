@@ -29,4 +29,12 @@ class Post extends Model
     {
         return $this->belongsTo(Book::class, 'book_id');
     }
+    public function likes()
+    {
+        return $this->morphMany(Like::class, 'likeable');
+    }
+    public function ratings()
+    {
+        return $this->morphMany(Rating::class, 'rateable');
+    }
 }

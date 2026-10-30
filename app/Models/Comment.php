@@ -13,7 +13,8 @@ class Comment extends Model
         'content',
         'user_id',
         'commentable_id',
-        'commentable_type'
+        'commentable_type',
+        'parent_id'
     ];
     public function user()
     {
@@ -23,6 +24,18 @@ class Comment extends Model
     public function commentable()
     {
         return $this->morphTo();
+    }
+    public function parent()
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+    public function replies()
+    {
+        return $this->hasMany(self::class, 'parent_id')->with(['user', 'replies']);
+    }
+    public function likes()
+    {
+        return $this->morphMany(Like::class, 'likeable');
     }
     /* public function post()
     {
