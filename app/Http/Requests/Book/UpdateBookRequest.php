@@ -25,7 +25,7 @@ class UpdateBookRequest extends FormRequest
             "title" => "max:50|min:5|unique:books,title," . $this->route('book'), // Учитываем текущую книгу при уникальности
             "author" => "max:50|min:5",
             "description" => "required_without_all:title,author,cover_image,author_bio,language,rating,number_of_pages,is_published,categories|min:10|max:10000",
-            "cover_image" => "nullable", // Поле может быть nullable
+            "cover_image" => "nullable|image|mimes:jpeg,png,jpg,gif|max:2048",
             "author_bio" => "nullable", // Поле может быть nullable
             "language" => "nullable", // Поле может быть nullable
             "rating" => "nullable|numeric", // Поле может быть nullable и должно быть числом

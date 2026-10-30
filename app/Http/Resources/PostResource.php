@@ -4,12 +4,6 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Models\Post;
-use App\Models\User;
-use App\Models\Comment;
-use App\Http\Resources\UserResource;
-use App\Http\Resources\BookResource;
-use App\Http\Resources\Comments\CommentResource;
 
 class PostResource extends JsonResource
 {
@@ -20,20 +14,41 @@ class PostResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return [  
-            "id"=> $this->id,
-            "user" => new UserResource(User::findOrFail($this->user_id)),
-            'comments' => $this->commentsData(),
-            "title" => $this->title,
-            "content" => $this->content,
-            "book_id" => $this->book_id,
-            "created_at" => $this->created_at,
+        $tags = [];
+
+        if ($this->book && $this->book->relationLoaded('categories')) {
+            $tags = $this->book->categories->map(static fn ($category) => [
+                'id' => $category->id,
+                'name' => $category->name,
+            ])->values()->all();
+        }
+
+        $isLiked = false;
+        if ($request->user()) {
+            $isLiked = $this->likes()
+                ->where('user_id', $request->user()->id)
+                ->exists();
+        }
+
+        return [
+            'id' => $this->id,
+            'user_id' => $this->user_id,
+            'user' => new UserResource($this->user),
+            'comments' => null,
+            'title' => $this->title,
+            'content' => $this->content,
+            'book_id' => $this->book_id,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+            'likes_count' => (int) ($this->likes_count ?? 0),
+            'comments_count' => (int) ($this->comments_count ?? 0),
+            'views_count' => (int) ($this->views_count ?? 0),
+            'is_liked' => $isLiked,
+            'average_rating' => round((float) ($this->ratings_avg_value ?? 0), 2),
+            'ratings_count' => (int) ($this->ratings_count ?? 0),
+            'tags' => $tags,
+            'categories' => $tags,
+            'image' => $this->book?->cover_image,
         ];
     }
-
-    protected function commentsData()
-    {
-        return new CommentResource(Comment::where('commentable_type', 'post')->where('commentable_id', $this->id)->first());
-    }
-    
 }

@@ -93,6 +93,11 @@ class SubscriptionService implements SubscriptionServiceInterface
         return ['success' => true, 'message' => 'Вы успешно отписались', 'status' => 200];
     }
 
+    public function find(int $subscriptionId): ?Subscription
+    {
+        return Subscription::find($subscriptionId);
+    }
+
     public function getSubscription(int $subscriptionId)
     {
         $subscription = Subscription::find($subscriptionId);

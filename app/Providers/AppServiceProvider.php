@@ -35,5 +35,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(Telegram::class, function () {
             return new TelegramBotFactory();
         });
+
     }
 }

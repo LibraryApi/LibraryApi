@@ -2,41 +2,27 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-
-use App\Exports\ExselCollectionExport;
 use App\Http\Controllers\Controller;
-use App\Services\ExportService\BooksExportService;
-use App\Services\ExportService\PostsExportService;
-use Illuminate\Http\Request;
+use App\Http\Requests\Export\ExportRequest;
+use App\Http\Resources\ErrorResource;
+use App\Services\Application\Export\ExportService;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ExportController extends Controller
 {
-
-    public function export(Request $request)
+    public function __construct(private readonly ExportService $exportService)
     {
+    }
 
-        $entity = $this->getEntity($request);
-        $exportParams = $this->getExportParams($request);
-        $exportClasses = [
-            'books' => BooksExportService::class,
-            'posts' =>  PostsExportService::class,
-        ];
+    public function export(ExportRequest $request): BinaryFileResponse|\Illuminate\Http\JsonResponse
+    {
+        $export = $this->exportService->make($request->validated());
 
-        if (isset($entity) && array_key_exists($entity, $exportClasses)) {
-            $exportClass = $exportClasses[$entity];
-            return Excel::download(new ExselCollectionExport($exportParams,new $exportClass), $entity . '.xlsx');
+        if (!$export) {
+            return response()->json(new ErrorResource('Неизвестная сущность'), 400);
         }
 
-        return response()->json(['error' => 'неизвестная сущность'], 400);
-    }
-
-    public function getEntity(Request $request)
-    {
-        return $request->input('entity');
-    }
-
-    public function getExportParams(Request $request){
-        return $request->all();
+        return Excel::download($export, $request->validated('entity') . '.xlsx');
     }
 }

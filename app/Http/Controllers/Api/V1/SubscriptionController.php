@@ -3,154 +3,99 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Subscription\PaymentWebhookRequest;
 use App\Http\Requests\Subscription\SubscriptionRequest;
-use App\Http\Resources\SubscriptionResource;
+use App\Http\Requests\Subscription\UpdateSubscriptionRequest;
+use App\Http\Resources\ErrorResource;
+use App\Http\Resources\MessageResource;
+use App\Http\Resources\Subscription\PaymentResource;
+use App\Http\Resources\Subscription\StoredSubscriptionResource;
+use App\Http\Resources\Subscription\SubscriptionCollection;
+use App\Http\Resources\WebhookResource;
 use App\Interfaces\Subscription\SubscriptionServiceInterface;
-use App\Models\Subscription;
-use App\Services\WrapperServices\PaymentService\PaymentService;
-use Illuminate\Http\Request;
+use App\Services\Application\Subscription\SubscriptionPurchaseService;
+use Illuminate\Http\JsonResponse;
 
 class SubscriptionController extends Controller
 {
-    protected $subscriptionService;
-    private $paymentService;
-
-    public function __construct(SubscriptionServiceInterface $subscriptionService, PaymentService $paymentService)
-    {
-        $this->subscriptionService = $subscriptionService;
-        $this->paymentService = $paymentService;
+    public function __construct(
+        private readonly SubscriptionServiceInterface $subscriptions,
+        private readonly SubscriptionPurchaseService $purchases
+    ) {
     }
 
-    /**
-     * Получить список всех доступных подписок.
-     */
-    public function getAllSubscriptions()
+    public function getAllSubscriptions(): JsonResponse
     {
-        $subscriptions = $this->subscriptionService->getAllSubscriptions();
-        return response()->json(['data' => $subscriptions], 200);
+        return response()->json(new SubscriptionCollection($this->subscriptions->getAllSubscriptions()));
     }
 
-    /**
-     * Получить список всех подписок текущего пользователя.
-     */
-    public function userSubscriptions()
+    public function userSubscriptions(): JsonResponse
     {
-        $user = auth()->user();
-        $subscriptions = $this->subscriptionService->getUserSubscriptions($user);
-        return response()->json(['data' => $subscriptions], 200);
+        return response()->json(new SubscriptionCollection(
+            $this->subscriptions->getUserSubscriptions(auth()->user())
+        ));
     }
 
-    /**
-     * Создать новую подписку.
-     */
-    public function storeSubscription(SubscriptionRequest $request)
+    public function storeSubscription(SubscriptionRequest $request): JsonResponse
     {
-        $subscriptionResult = $this->subscriptionService->storeSubscription($request->all());
+        $subscription = $this->subscriptions->storeSubscription($request->validated());
 
-        return response()->json([
+        return response()->json(new StoredSubscriptionResource([
             'message' => __('subscription.subscription_created'),
-            'data' => new SubscriptionResource($subscriptionResult)
-        ], 201);
+            'data' => $subscription,
+        ]), 201);
     }
 
-    /**
-     * Обновить существующую подписку.
-     */
-
-    public function updateSubscription(Request $request, Subscription $subscription)
+    public function updateSubscription(UpdateSubscriptionRequest $request, int $id): JsonResponse
     {
-        $updatedSubscription = $this->subscriptionService->updateSubscription($subscription, $request->all());
+        $subscription = $this->subscriptions->find($id);
 
-        return response()->json(['message' => __('subscription.subscription_updated')], 200);
-    }
-
-    /**
-     * Удалить указанную подписку.
-     */
-    public function destroySubscription($subscriptionId)
-    {
-        try {
-            $subscription = Subscription::find($subscriptionId);
-            if (!$subscription) {
-                return response()->json(['message' => __('subscription.subscription_not_found')], 404);
-            }
-            $this->subscriptionService->deleteSubscription($subscription);
-
-            return response()->json(['message' => __('subscription.subscription_deleted')], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => $e->getMessage()
-            ], 400);
-        }
-    }
-
-
-    /**
-     * Оформление подписки.
-     * 
-     * TODO нужно добавить
-     *      сейчас подписка добавляется в бд даже если платеж не прошел. Нужо будет реализовать полноценную обработку добавив очереди 
-     *      вместе с отправкой уведомления пользователя при получении вебхука от платежной системы
-     */
-    public function subscribeToSubscription(int $subscriptionId)
-    {
-        $user = auth()->user();
-
-        if (!$user) {
-            return response()->json(['message' => 'Пользователь не авторизован'], 401);
+        if (!$subscription) {
+            return response()->json(new ErrorResource(__('subscription.subscription_not_found')), 404);
         }
 
-        $subscriptionResult = $this->subscriptionService->subscribeToSubscription($user, $subscriptionId);
-        if (!$subscriptionResult['success']) {
-            return response()->json(['message' => $subscriptionResult['message']], $subscriptionResult['status']);
+        $this->subscriptions->updateSubscription($subscription, $request->validated());
+
+        return response()->json(new MessageResource(__('subscription.subscription_updated')));
+    }
+
+    public function destroySubscription(int $id): JsonResponse
+    {
+        $subscription = $this->subscriptions->find($id);
+
+        if (!$subscription) {
+            return response()->json(new ErrorResource(__('subscription.subscription_not_found')), 404);
         }
 
-        $payment = $this->paymentService->createPayment($subscriptionId);
-        return response()->json(['payment_url' => $payment->getConfirmation()->getConfirmationUrl()], 200);
+        $this->subscriptions->deleteSubscription($subscription);
+
+        return response()->json(new MessageResource(__('subscription.subscription_deleted')));
     }
 
-    /**
-     * Отмена подписки
-     * 
-     * TODO.
-     */
-    public function unsubscribeFromSubscription()
+    public function subscribeToSubscription(int $subscriptionId): JsonResponse
     {
-        $user = auth()->user();
-        $result = $this->subscriptionService->unsubscribeFromSubscription($user);
-        return response()->json(['message' => $result['message']], $result['status']);
-    }
+        $result = $this->purchases->purchase(auth()->user(), $subscriptionId);
 
-    /**
-     * Обработка успешного платежа.
-     */
-    public function successPayment(Request $request, $paymentId)
-    {
-        $url = "https://api.yookassa.ru/v3/payments/{$paymentId}/capture";
-        // TO DO: Обработать успешный платеж.
-    }
-
-    /**
-     * Отмена платежа.
-     */
-    public function cancelPayment(Request $request, $paymentId)
-    {
-        $url = "https://api.yookassa.ru/v3/payments/{$paymentId}/cancel";
-        // TO DO: Обработать отмену платежа.
-    }
-
-    /**
-     * Вебхук для обработки событий платежей. Сюда приходят уведомления от платежной системы
-     */
-    public function paymentsWebhook(Request $request)
-    {
-        $event = $request->all();
-
-        if ($event['event'] === 'payment.succeeded') {
-            $result = $this->paymentService->handleWebhook($event);
-            return response()->json($result);
+        if (!$result['success']) {
+            return response()->json(new ErrorResource($result['message']), $result['status']);
         }
 
-        return response()->json(['status' => 'unhandled event']);
+        return response()->json(new PaymentResource(['payment_url' => $result['payment_url']]));
+    }
+
+    public function unsubscribeFromSubscription(): JsonResponse
+    {
+        $result = $this->purchases->unsubscribe(auth()->user());
+
+        if (!($result['success'] ?? false)) {
+            return response()->json(new ErrorResource($result['message'] ?? 'Не удалось отменить подписку'), $result['status'] ?? 422);
+        }
+
+        return response()->json(new MessageResource($result['message']));
+    }
+
+    public function paymentsWebhook(PaymentWebhookRequest $request): JsonResponse
+    {
+        return response()->json(new WebhookResource($this->purchases->handleWebhook($request->validated())));
     }
 }

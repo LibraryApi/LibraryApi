@@ -10,6 +10,7 @@ interface SubscriptionServiceInterface
     public function subscribeToSubscription(User $user, int $subscriptionId);
     public function unsubscribeFromSubscription(User $user);
     public function getSubscription(int $subscriptionId);
+    public function find(int $subscriptionId): ?Subscription;
 
     public function storeSubscription($subscription);
     public function getUserSubscriptions(User $user);

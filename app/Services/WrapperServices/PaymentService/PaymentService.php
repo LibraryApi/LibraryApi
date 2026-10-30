@@ -15,7 +15,11 @@ class PaymentService
     public function __construct()
     {
         $this->client = new Client();
-        $this->client->setAuth(config('yookassa.shop_id'), config('yookassa.secret_key'));
+        $shopId = config('yookassa.shop_id');
+        $secretKey = config('yookassa.secret_key');
+        if ($shopId && $secretKey) {
+            $this->client->setAuth($shopId, $secretKey);
+        }
     }
 
     public function createPayment(int $subscriptionId)
@@ -47,8 +51,8 @@ class PaymentService
         ]);
 
         return $payment;
-    } catch (\Exception $e) {
-        return response()->json(['error' => 'Не удалось создать платеж: ' . $e->getMessage()], 500);
+    } catch (\Throwable $e) {
+        throw new \RuntimeException('Не удалось создать платеж: ' . $e->getMessage(), 0, $e);
     }
 }
 

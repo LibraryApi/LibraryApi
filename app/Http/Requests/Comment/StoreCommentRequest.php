@@ -14,7 +14,8 @@ class StoreCommentRequest extends FormRequest
         return [
             'content' => 'required|string',
             'commentable_id' => 'required|int',
-            'commentable_type'=> 'required|string'
+            'commentable_type'=> 'required|in:post,book,chapter,App\\Models\\Post,App\\Models\\Book,App\\Models\\Chapter',
+            'parent_id' => 'nullable|integer|exists:comments,id'
         ];
     }
 

@@ -3,157 +3,82 @@
 namespace App\Http\Controllers\Api\V1\Book;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Book\IndexBookRequest;
 use App\Http\Requests\Book\StoreBookRequest;
 use App\Http\Requests\Book\UpdateBookRequest;
+use App\Http\Resources\BookAuthorCollection;
+use App\Http\Resources\BookCollection;
 use App\Http\Resources\Books\BookResource;
-use App\Services\WrapperServices\RoleService;
+use App\Http\Resources\ErrorResource;
+use App\Http\Resources\MessageResource;
 use App\Models\Book;
-use App\Models\User;
-use App\Services\WrapperServices\Telegram\WebhookSenders\WebhookSender;
-use Exception;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use App\Services\Application\Book\BookService;
+use Illuminate\Http\JsonResponse;
 
 class BookController extends Controller
 {
-    protected $roleService;
-    protected $telegram;
-
-    public function __construct(RoleService $roleService)
+    public function __construct(private readonly BookService $bookService)
     {
-        $this->roleService = $roleService;
-        $this->telegram = new WebhookSender();
     }
 
-    public function index(Request $request): \Illuminate\Http\JsonResponse
+    public function index(IndexBookRequest $request): JsonResponse
     {
-        $query = Book::query();
+        $books = $this->bookService->paginate($request->filters(), $request->perPage());
 
-        // Фильтр по автору
-        if ($request->filled('author')) {
-            $query->where('author', $request->input('author'));
-        }
-
-        // Фильтр по категории
-        if ($request->filled('category')) {
-            $query->whereHas('categories', function ($categoryQuery) use ($request) {
-                $categoryQuery->where('name', $request->input('category'));
-            });
-        }
-
-        // Фильтр по поисковому запросу
-        if ($request->filled('search')) {
-            $query->where('title', 'like', '%' . $request->input('search') . '%')
-                ->orWhere('description', 'like', '%' . $request->input('search') . '%');
-        }
-
-        // Сортировка
-        if ($request->filled('sortDate')) {
-            $query->orderBy('created_at', $request->input('sortDate') === 'asc' ? 'asc' : 'desc');
-        }
-
-        if ($request->filled('sortName')) {
-            $query->orderBy('title', $request->input('sortName') === 'asc' ? 'asc' : 'desc');
-        }
-
-        $perPage = $request->input('per_page', 3);
-        $books = $query->paginate($perPage);
-
-        return response()->json([
-            'total_books' => $books->total(),
-            'per_page' => $books->perPage(),
-            'current_page' => $books->currentPage(),
-            'last_page' => $books->lastPage(),
-            'books' => BookResource::collection($books->items()),
-        ]);
+        return response()->json(new BookCollection($books));
     }
 
-
-    public function store(StoreBookRequest $request): \Illuminate\Http\JsonResponse
+    public function authors(): JsonResponse
     {
-        $data = $request->validated();
-
-        $book = new Book([
-            'title' => $data['title'],
-            'author' => $data['author'],
-            'description' => $data['description'],
-            'user_id' => auth()->user()->id,
-            'cover_image' => $data['cover_image'] ?? null,
-            'author_bio' => $data['author_bio'] ?? null,
-            'language' => $data['language'] ?? 'ru',
-            'rating' => $data['rating'] ?? null,
-            'number_of_pages' => $data['number_of_pages'] ?? null,
-            'is_published' => $data['is_published'] ?? false,
-            'comments_count' => 0,
-            'likes_count' => 0,
-            'views_count' => 0,
-        ]);
-
-        $this->roleService->assignRoleToUser(auth()->user(), User::ROLE_AUTHOR);
-
-        $this->authorize('create', $book);
-        $book->save();
-
-        if (isset($data['categories'])) {
-            $book->categories()->attach($data['categories']);
-        }
-
-        $book = new BookResource($book);
-
-        return response()->json($book, 201);
+        return response()->json(new BookAuthorCollection($this->bookService->authors()));
     }
 
-
-    public function show(string $bookId): \Illuminate\Http\JsonResponse
+    public function store(StoreBookRequest $request): JsonResponse
     {
-        $book = Book::find($bookId);
-        if (!$book) {
-            return response()->json(['error' => 'Книга не найдена'], 404);
-        }
-        $book = new BookResource($book);
+        $this->authorize('create', Book::class);
 
-        $user = auth()->user();
+        $book = $this->bookService->create($request->validated(), $request->file('cover_image'));
 
-        /* $telegram = $this->telegram->createMessageSender();
-        $telegram->message(['text' => "Пользователь {$user->name} открыл книгу \"{$book->title}\""])->sendMessage(); */
-
-        return response()->json($book);
+        return response()->json(new BookResource($book), 201);
     }
 
-    public function update(UpdateBookRequest $request, $bookId): \Illuminate\Http\JsonResponse
+    public function show(int $bookId): JsonResponse
     {
-        $data = $request->validated();
-
-        $book = Book::find($bookId);
+        $book = $this->bookService->find($bookId);
 
         if (!$book) {
-            return response()->json(['error' => 'Книга не найдена'], 404);
+            return response()->json(new ErrorResource('Книга не найдена'), 404);
+        }
+
+        return response()->json(new BookResource($book));
+    }
+
+    public function update(UpdateBookRequest $request, int $bookId): JsonResponse
+    {
+        $book = $this->bookService->findBasic($bookId);
+
+        if (!$book) {
+            return response()->json(new ErrorResource('Книга не найдена'), 404);
         }
 
         $this->authorize('update', $book);
-        $book->update($data);
 
-        if (isset($data['categories'])) {
-            $book->categories()->sync($data['categories']);
-        }
-
-        $book = new BookResource($book);
-
-        return response()->json($book, 200);
+        return response()->json(new BookResource(
+            $this->bookService->update($book, $request->validated(), $request->file('cover_image'))
+        ));
     }
 
-    public function destroy($bookId): \Illuminate\Http\JsonResponse
+    public function destroy(int $bookId): JsonResponse
     {
-        $book = Book::find($bookId);
-
+        $book = $this->bookService->findBasic($bookId);
 
         if (!$book) {
-            return response()->json(['error' => 'Книга не найдена'], 404);
+            return response()->json(new ErrorResource('Книга не найдена'), 404);
         }
 
         $this->authorize('delete', $book);
-        $book->delete();
+        $this->bookService->delete($book);
 
-        return response()->json(['message' => 'Книга успешно удалена!'], 200);
+        return response()->json(new MessageResource('Книга успешно удалена!'));
     }
 }

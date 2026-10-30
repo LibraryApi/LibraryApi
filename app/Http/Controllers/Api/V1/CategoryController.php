@@ -2,72 +2,81 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Models\Category;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Category\StoreCategoryRequest;
 use App\Http\Requests\Category\UpdateCategoryRequest;
+use App\Http\Resources\CategoryCollection;
 use App\Http\Resources\CategoryResource;
+use App\Http\Resources\ErrorResource;
+use App\Http\Resources\MessageResource;
+use App\Models\Category;
+use App\Services\Application\Category\CategoryService;
+use Illuminate\Http\JsonResponse;
 
 class CategoryController extends Controller
 {
-    public function index(): \Illuminate\Http\JsonResponse
+    public function __construct(private readonly CategoryService $categoryService)
     {
-        // TODO добавить пагинацию и фильтрацию
-        $categories = Category::all();
-        if($categories->isEmpty()){
-            return response()->json(['error' => 'категорий не найдено'], 404);
-        }
-
-        $categories = CategoryResource::collection($categories);
-        return response()->json($categories);
     }
 
-    public function store(StoreCategoryRequest $request): \Illuminate\Http\JsonResponse
+    public function index(): JsonResponse
     {
-        $data = $request->validated();
+        $categories = $this->categoryService->all();
 
+        if ($categories->isEmpty()) {
+            return response()->json(new ErrorResource('Категорий не найдено'), 404);
+        }
+
+        return response()->json(new CategoryCollection($categories));
+    }
+
+    public function store(StoreCategoryRequest $request): JsonResponse
+    {
         $this->authorize('create', Category::class);
-        $category = Category::create($data);
 
-        $category = new CategoryResource($category);
-        return response()->json($category, 201);
+        return response()->json(
+            new CategoryResource($this->categoryService->create($request->validated())),
+            201
+        );
     }
 
-    public function show($categoryId): \Illuminate\Http\JsonResponse
+    public function show(int $categoryId): JsonResponse
     {
-        $category = Category::find($categoryId);
-        if(!$category){
-            return response()->json(['error' => 'категория не найдена'], 404);
+        $category = $this->categoryService->find($categoryId);
+
+        if (!$category) {
+            return response()->json(new ErrorResource('Категория не найдена'), 404);
         }
-        $category = new CategoryResource($category);
-        return response()->json($category);
+
+        return response()->json(new CategoryResource($category));
     }
 
-    public function update(UpdateCategoryRequest $request, $categoryId): \Illuminate\Http\JsonResponse
+    public function update(UpdateCategoryRequest $request, int $categoryId): JsonResponse
     {
-        $category = Category::find($categoryId);
-        if(!$category){
-            return response()->json(['error' => 'категория не найдена'], 404);
+        $category = $this->categoryService->find($categoryId);
+
+        if (!$category) {
+            return response()->json(new ErrorResource('Категория не найдена'), 404);
         }
-        $data = $request->validated();
 
         $this->authorize('update', $category);
-        $category->update($data);
 
-        $category = new CategoryResource($category);
-        return response()->json($category, 200);
+        return response()->json(new CategoryResource(
+            $this->categoryService->update($category, $request->validated())
+        ));
     }
 
-    public function destroy(string $categoryId): \Illuminate\Http\JsonResponse
+    public function destroy(int $categoryId): JsonResponse
     {
-        $category = Category::find($categoryId);
-        if(!$category){
-            return response()->json(['error' => 'категория не найдена'], 404);
-        }
-        $this->authorize('delete', $category);
-        $category->delete();
+        $category = $this->categoryService->find($categoryId);
 
-        return response()->json(['message' => 'Категория успешно удалена'], 200);
+        if (!$category) {
+            return response()->json(new ErrorResource('Категория не найдена'), 404);
+        }
+
+        $this->authorize('delete', $category);
+        $this->categoryService->delete($category);
+
+        return response()->json(new MessageResource('Категория успешно удалена'));
     }
 }
-
