@@ -24,6 +24,38 @@ Library API - это веб-приложение и сервис API для он
 6. Запустить сидеры для тестовых данных: `php artisan db:seed`
 7. Запустить сервер: `php artisan serve`
 
+## Docker
+
+Docker-окружение поднимает API и MySQL. API доступен на `http://localhost:8777`,
+порт можно изменить переменной `API_PORT`.
+
+```bash
+cp .env.example .env
+php artisan key:generate
+
+docker compose up -d --build
+
+# Только при первом запуске, если нужны тестовые данные
+docker compose exec api php artisan db:seed --force
+```
+
+Docker использует собственную базу `library` и пользователя `library`; значения
+`DB_*` из `.env` для контейнера переопределяются. После изменений PHP-кода
+пересоберите образ: `docker compose up -d --build`.
+
+Полезные команды:
+
+```bash
+docker compose logs -f api
+docker compose exec api php artisan migrate
+docker compose exec api php artisan db:seed --force
+docker compose down
+```
+
+Перед запуском Docker остановите локальный `php artisan serve`, если он
+занимает порт `8777`. Загруженные обложки и аватары хранятся в volume `uploads`,
+данные MySQL — в volume `db_data`, поэтому они переживают перезапуск контейнеров.
+
 ## Использование API
 
 - Документация API: [ссылка на документацию]
