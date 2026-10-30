@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\ExportController;
+use App\Http\Controllers\Api\V1\FeedController;
 use App\Http\Controllers\Api\V1\Book\BookController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PostController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Book\ChapterController;
 use App\Http\Controllers\Api\V1\SubscriptionController;
+use App\Http\Controllers\Api\V1\InteractionController;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Telegram\WebhookController;
@@ -26,13 +28,22 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::get('books', [BookController::class, 'index']);
+Route::get('books/authors', [BookController::class, 'authors']);
 Route::get('categories', [CategoryController::class, 'index']);
+Route::get('posts/authors', [PostController::class, 'authors']);
 Route::get('posts', [PostController::class, 'index']);
 Route::get('comments', [CommentController::class, 'index']);
 Route::get('users', [UserController::class, 'index']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('feed', [FeedController::class, 'index']);
+    Route::post('{type}/{id}/like', [InteractionController::class, 'like'])->whereIn('type', ['book', 'books', 'chapter', 'chapters', 'post', 'posts', 'comment', 'comments']);
+    Route::delete('{type}/{id}/like', [InteractionController::class, 'unlike'])->whereIn('type', ['book', 'books', 'chapter', 'chapters', 'post', 'posts', 'comment', 'comments']);
+    Route::post('{type}/{id}/rating', [InteractionController::class, 'rate'])->whereIn('type', ['book', 'books', 'chapter', 'chapters', 'post', 'posts', 'comment', 'comments']);
+    Route::delete('{type}/{id}/rating', [InteractionController::class, 'unrated'])->whereIn('type', ['book', 'books', 'chapter', 'chapters', 'post', 'posts', 'comment', 'comments']);
     Route::apiResource('comments', CommentController::class)->except(['index']);
+    Route::post('users/{id}/follow', [UserController::class, 'follow']);
+    Route::delete('users/{id}/follow', [UserController::class, 'unfollow']);
     Route::apiResource('users', UserController::class)->except(['index']);
     Route::apiResource('posts', PostController::class)->except(['index']);
 
