@@ -17,8 +17,3 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/test', function () {
-    dd(phpinfo());
-    return view('test');
-});
-

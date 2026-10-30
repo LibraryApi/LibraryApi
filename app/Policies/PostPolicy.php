@@ -9,16 +9,22 @@ class PostPolicy
 {
     public function create(User $user)
     {
-        return $user->hasAnyRole(USER::ROLE_READER, USER::ROLE_AUTHOR, USER::ROLE_ADMIN);
+        return $user->hasAnyRole(User::ROLE_READER, User::ROLE_AUTHOR, User::ROLE_ADMIN);
     }
 
     public function update(User $user, Post $post = null)
     {
-        return $user->hasRole(USER::ROLE_ADMIN) || $user->id === $post->user_id;
+        if (!$post) {
+            return false;
+        }
+        return $user->hasRole(User::ROLE_ADMIN) || $user->id === $post->user_id;
     }
 
     public function delete(User $user, Post $post = null)
     {
-        return $user->hasRole(USER::ROLE_ADMIN) || $user->id === $post->user_id;
+        if (!$post) {
+            return false;
+        }
+        return $user->hasRole(User::ROLE_ADMIN) || $user->id === $post->user_id;
     }
 }

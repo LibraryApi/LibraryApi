@@ -17,7 +17,7 @@ class CommentPolicy
 
     public function viewAnyComments(User $user)
     {
-        return $user->hasRole(USER::ROLE_ADMIN);
+        return $user->hasRole(User::ROLE_ADMIN);
     }
 
     public function viewComment(User $user, Comment $comment = null)
@@ -27,16 +27,22 @@ class CommentPolicy
 
     public function createComment(User $user, Comment $comment = null)
     {
-        return $user->hasAnyRole(USER::ROLE_READER, USER::ROLE_AUTHOR, USER::ROLE_ADMIN);
+        return $user->hasAnyRole(User::ROLE_READER, User::ROLE_AUTHOR, User::ROLE_ADMIN);
     }
 
     public function updateComment(User $user, Comment $comment = null)
     {
-        return $user->hasRole(USER::ROLE_ADMIN) || ($user->hasRole(USER::ROLE_AUTHOR) && $user->id === $comment->user_id);
+        if (!$comment) {
+            return false;
+        }
+        return $user->hasRole(User::ROLE_ADMIN) || $user->id === $comment->user_id;
     }
 
     public function deleteComment(User $user, Comment $comment = null)
     {
-        return $user->hasRole(USER::ROLE_ADMIN) || ($user->hasRole(USER::ROLE_AUTHOR) && $user->id === $comment->user_id);
+        if (!$comment) {
+            return false;
+        }
+        return $user->hasRole(User::ROLE_ADMIN) || $user->id === $comment->user_id;
     }
 }
