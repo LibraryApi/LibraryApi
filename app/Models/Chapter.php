@@ -25,4 +25,16 @@ class Chapter extends Model
     {
         return $this->belongsTo(Book::class);
     }
+    public function likes()
+    {
+        return $this->morphMany(Like::class, 'likeable');
+    }
+    public function ratings()
+    {
+        return $this->morphMany(Rating::class, 'rateable');
+    }
+    public function comments()
+    {
+        return $this->morphMany(Comment::class, 'commentable');
+    }
 }

@@ -44,7 +44,19 @@ class Book extends Model
     {
         return $this->belongsToMany(Category::class);
     }
-    
+    public function likes()
+    {
+        return $this->morphMany(Like::class, 'likeable');
+    }
+    public function ratings()
+    {
+        return $this->morphMany(Rating::class, 'rateable');
+    }
+    public function comments()
+    {
+        return $this->morphMany(Comment::class, 'commentable');
+    }
+
     public function getAuthorNameAttribute()
     {
         return $this->user->name;
