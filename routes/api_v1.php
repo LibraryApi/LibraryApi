@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Book\ChapterController;
 use App\Http\Controllers\Api\V1\SubscriptionController;
 use App\Http\Controllers\Api\V1\InteractionController;
+use App\Http\Controllers\Api\V1\WishlistController;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Telegram\WebhookController;
@@ -48,6 +49,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('posts', PostController::class)->except(['index']);
 
     Route::apiResource('books', BookController::class)->except(['index']);
+
+    // Список желаемого — отдельная сущность, не лайки
+    Route::get('wishlist', [WishlistController::class, 'index']);
+    Route::post('books/{book}/wishlist', [WishlistController::class, 'store']);
+    Route::delete('books/{book}/wishlist', [WishlistController::class, 'destroy']);
 
     Route::apiResource('books.chapters', ChapterController::class);
     Route::apiResource('categories', CategoryController::class)->except(['index']);

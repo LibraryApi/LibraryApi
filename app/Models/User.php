@@ -104,6 +104,13 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    public function likedBooks()
+    {
+        return $this->belongsToMany(Book::class, 'likes', 'user_id', 'likeable_id')
+            ->where('likes.likeable_type', (new Book())->getMorphClass())
+            ->withTimestamps();
+    }
+
     public function isFollowing(User $user): bool
     {
         return $this->following()->where('users.id', $user->id)->exists();

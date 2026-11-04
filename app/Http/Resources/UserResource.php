@@ -14,7 +14,7 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $viewer = $request->user();
+        $viewer = $request->user('sanctum') ?? $request->user();
         $isOwnProfile = $viewer && (int) $viewer->id === (int) $this->id;
 
         return [
@@ -42,32 +42,8 @@ class UserResource extends JsonResource
             'following_count' => $this->whenCounted('following'),
             'posts' => PostResource::collection($this->whenLoaded('posts')),
             'liked_posts' => PostResource::collection($this->whenLoaded('likedPosts')),
-            'books' => $this->whenLoaded('books', function () {
-                return $this->books->map(function ($book) {
-                    $coverImage = $book->cover_image;
-
-                    if ($coverImage && !str_starts_with($coverImage, 'http://') && !str_starts_with($coverImage, 'https://')) {
-                        $coverImage = url($coverImage);
-                    }
-
-                    return [
-                        'id' => $book->id,
-                        'title' => $book->title,
-                        'author' => $book->author,
-                        'cover_image' => $coverImage,
-                        'description' => $book->description,
-                        'likes_count' => (int) ($book->likes_count ?? 0),
-                        'comments_count' => (int) ($book->comments_count ?? 0),
-                        'views_count' => (int) ($book->views_count ?? 0),
-                        'categories' => $book->relationLoaded('categories')
-                            ? $book->categories->map(fn ($category) => [
-                                'id' => $category->id,
-                                'name' => $category->name,
-                            ])->values()->all()
-                            : [],
-                    ];
-                })->values()->all();
-            }),
+            'books' => $this->whenLoaded('books', fn () => $this->mapBooks($this->books)),
+            'liked_books' => $this->whenLoaded('likedBooks', fn () => $this->mapBooks($this->likedBooks)),
             'followers' => $this->whenLoaded('followers', function () {
                 return $this->followers->map(function ($user) {
                     return [
@@ -96,4 +72,35 @@ class UserResource extends JsonResource
             ),
         ];
     }
+
+    private function mapBooks($books): array
+    {
+        return $books->map(function ($book) {
+            $coverImage = $book->cover_image;
+
+            if ($coverImage && !str_starts_with($coverImage, 'http://') && !str_starts_with($coverImage, 'https://')) {
+                $coverImage = url($coverImage);
+            }
+
+            return [
+                'id' => $book->id,
+                'title' => $book->title,
+                'author' => $book->author,
+                'cover_image' => $coverImage,
+                'description' => $book->description,
+                'rating' => $book->rating,
+                'chapters_count' => (int) ($book->chapters_count ?? 0),
+                'likes_count' => (int) ($book->likes_count ?? 0),
+                'comments_count' => (int) ($book->comments_count ?? 0),
+                'views_count' => (int) ($book->views_count ?? 0),
+                'categories' => $book->relationLoaded('categories')
+                    ? $book->categories->map(fn ($category) => [
+                        'id' => $category->id,
+                        'name' => $category->name,
+                    ])->values()->all()
+                    : [],
+            ];
+        })->values()->all();
+    }
+
 }

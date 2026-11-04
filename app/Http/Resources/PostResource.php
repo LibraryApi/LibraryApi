@@ -23,10 +23,12 @@ class PostResource extends JsonResource
             ])->values()->all();
         }
 
+        $viewer = $request->user('sanctum') ?? $request->user();
+
         $isLiked = false;
-        if ($request->user()) {
+        if ($viewer) {
             $isLiked = $this->likes()
-                ->where('user_id', $request->user()->id)
+                ->where('user_id', $viewer->id)
                 ->exists();
         }
 

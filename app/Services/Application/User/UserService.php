@@ -46,7 +46,8 @@ class UserService
                         ->withAvg('ratings', 'value')
                         ->latest();
                 },
-                'books' => fn ($query) => $query->with('categories')->latest(),
+                'books' => fn ($query) => $query->with('categories')->withCount('chapters')->latest(),
+                'likedBooks' => fn ($query) => $query->with('categories')->withCount('chapters')->latest(),
                 'followers' => fn ($query) => $query->select('users.id', 'users.name', 'users.avatar', 'users.city')
                     ->orderBy('users.name')
                     ->limit(30),

@@ -201,11 +201,20 @@ class BookService
             case 'rating_asc':
                 $query->orderBy('rating');
                 break;
+            // Колонка likes_count не поддерживается в актуальном состоянии —
+            // считаем лайки по связи, дальше идут рейтинг и просмотры.
             case 'likes_desc':
-                $query->orderByDesc('likes_count');
+                $query->withCount(['likes as likes_total'])
+                    ->orderByDesc('likes_total')
+                    ->orderByDesc('rating')
+                    ->orderByDesc('views_count')
+                    ->latest();
                 break;
             case 'likes_asc':
-                $query->orderBy('likes_count');
+                $query->withCount(['likes as likes_total'])
+                    ->orderBy('likes_total')
+                    ->orderBy('rating')
+                    ->latest();
                 break;
             default:
                 $query->latest();

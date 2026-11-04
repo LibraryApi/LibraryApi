@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\DTO\Post\StorePostDTO;
 use App\DTO\Post\UpdatePostDTO;
+use App\Models\Post;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Post\AuthorPostRequest;
 use App\Http\Requests\Post\IndexPostRequest;
@@ -62,6 +63,14 @@ class PostController extends Controller
 
     public function update(UpdatePostRequest $request, int $id): JsonResponse
     {
+        $existing = Post::find($id);
+
+        if (!$existing) {
+            return response()->json(new ErrorResource('Пост не найден'), Response::HTTP_NOT_FOUND);
+        }
+
+        $this->authorize('update', $existing);
+
         $post = $this->postService->updatePost(UpdatePostDTO::fromRequest($request->validated()), $id);
 
         if (!$post) {
@@ -73,6 +82,14 @@ class PostController extends Controller
 
     public function destroy(int $id): JsonResponse
     {
+        $post = Post::find($id);
+
+        if (!$post) {
+            return response()->json(new ErrorResource('Пост не найден'), Response::HTTP_NOT_FOUND);
+        }
+
+        $this->authorize('delete', $post);
+
         $status = $this->postService->deletePost($id);
 
         if (!$status) {
