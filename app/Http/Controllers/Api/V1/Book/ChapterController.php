@@ -13,6 +13,7 @@ use App\Http\Resources\MessageResource;
 use App\Models\Chapter;
 use App\Services\Application\Chapter\ChapterService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ChapterController extends Controller
 {
@@ -28,9 +29,12 @@ class ChapterController extends Controller
             return response()->json(new ErrorResource('Книга не найдена'), 404);
         }
 
-        return response()->json(new ChapterCollection(
+        $collection = new ChapterCollection(
             $this->chapterService->paginate($book, $request->perPage())
-        ));
+        );
+        $collection->totalPages = $book->pages()->count();
+
+        return response()->json($collection);
     }
 
     public function show(int $bookId, int $chapterId): JsonResponse
@@ -85,6 +89,26 @@ class ChapterController extends Controller
         return response()->json(new ChapterResource(
             $this->chapterService->update($chapter, $request->validated())
         ));
+    }
+
+    public function reorder(Request $request, int $bookId): JsonResponse
+    {
+        $book = $this->chapterService->findBook($bookId);
+
+        if (!$book) {
+            return response()->json(new ErrorResource('Книга не найдена'), 404);
+        }
+
+        $this->authorize('update', $book);
+
+        $data = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ]);
+
+        $this->chapterService->reorder($book, $data['ids']);
+
+        return response()->json(new MessageResource('Порядок глав обновлён'));
     }
 
     public function destroy(int $bookId, int $chapterId): JsonResponse

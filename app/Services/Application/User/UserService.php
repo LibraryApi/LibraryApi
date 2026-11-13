@@ -52,6 +52,7 @@ class UserService
                     ->orderBy('users.name')
                     ->limit(30),
                 'following' => fn ($query) => $query->select('users.id', 'users.name', 'users.avatar', 'users.city')
+                    ->whereHas('books')
                     ->orderBy('users.name')
                     ->limit(30),
             ])
@@ -86,10 +87,44 @@ class UserService
         return $user->fresh();
     }
 
+    public function authors(int $limit = 100, string $search = '')
+    {
+        return User::query()
+            ->whereHas('books')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($subQuery) use ($search) {
+                    $subQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('about', 'like', "%{$search}%");
+                });
+            })
+            ->withCount(['books', 'followers'])
+            ->with(['books' => fn ($query) => $query->latest()])
+            ->orderByDesc('books_count')
+            ->orderBy('name')
+            ->limit($limit)
+            ->get();
+    }
+
+    public function subscribedAuthors(User $user, int $limit = 100)
+    {
+        return $user->following()
+            ->whereHas('books')
+            ->withCount(['books', 'followers'])
+            ->with(['books' => fn ($query) => $query->latest()])
+            ->orderByDesc('books_count')
+            ->orderBy('name')
+            ->limit($limit)
+            ->get();
+    }
+
     public function follow(User $viewer, User $target): array
     {
         if ((int) $viewer->id === (int) $target->id) {
             return ['ok' => false, 'status' => 422, 'error' => 'Нельзя подписаться на себя'];
+        }
+
+        if (!$target->books()->exists()) {
+            return ['ok' => false, 'status' => 422, 'error' => 'Подписаться можно только на авторов книг'];
         }
 
         $viewer->following()->syncWithoutDetaching([$target->id]);

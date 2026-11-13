@@ -102,9 +102,13 @@ class BookService
         $book = Book::with([
             'categories',
             'user',
-            'chapters' => fn ($query) => $query->orderBy('number', 'asc')->orderBy('id', 'asc'),
+            'chapters' => fn ($query) => $query
+                ->with('pageList')
+                ->withCount('pages')
+                ->orderBy('number', 'asc')
+                ->orderBy('id', 'asc'),
         ])
-            ->withCount(['chapters', 'likes', 'comments'])
+            ->withCount(['chapters', 'pages', 'likes', 'comments'])
             ->withAvg('ratings', 'value')
             ->find($bookId);
 

@@ -60,7 +60,6 @@ class ChapterSeeder extends Seeder
                 'title' => $chapterTitles[array_rand($chapterTitles)],
                 'content' => $this->getChapterText($chapters),
                 'book_id' => rand(1, 40),
-                //'duration' => 1,
                 //'characters' => 1,
                 //'images' => 1
             ]);

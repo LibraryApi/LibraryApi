@@ -12,31 +12,38 @@ class FeedService
     public function get(User $user): array
     {
         $following = $user->following()
-            ->select('users.id', 'users.name', 'users.avatar', 'users.city')
+            ->select('users.id', 'users.name', 'users.avatar', 'users.city', 'users.about')
+            ->whereHas('books')
+            ->withCount('books')
             ->orderBy('users.name')
             ->get();
 
         $followingIds = $following->pluck('id')->all();
+        $postsEnabled = (bool) config('features.posts_enabled', false);
 
-        $feedPosts = $this->postQuery()
-            ->whereIn('user_id', $followingIds)
-            ->latest()
-            ->limit(6)
-            ->get();
+        $feedPosts = $postsEnabled
+            ? $this->postQuery()
+                ->whereIn('user_id', $followingIds)
+                ->latest()
+                ->limit(6)
+                ->get()
+            : collect();
 
-        $recommendedPosts = $this->postQuery()
-            ->latest()
-            ->limit(6)
-            ->get();
+        $recommendedPosts = $postsEnabled
+            ? $this->postQuery()
+                ->latest()
+                ->limit(6)
+                ->get()
+            : collect();
 
         $suggestedAuthors = User::query()
-            ->whereHas('posts')
+            ->whereHas('books')
             ->where('id', '!=', $user->id)
             ->when($followingIds !== [], function ($query) use ($followingIds) {
                 $query->whereNotIn('id', $followingIds);
             })
-            ->withCount('posts')
-            ->orderByDesc('posts_count')
+            ->withCount(['books', 'followers'])
+            ->orderByDesc('books_count')
             ->limit(4)
             ->get();
 
@@ -60,7 +67,7 @@ class FeedService
             'plans' => $plans,
             'stats' => [
                 'following_count' => $following->count(),
-                'posts_count' => (int) $user->posts()->count(),
+                'posts_count' => $postsEnabled ? (int) $user->posts()->count() : 0,
                 'books_count' => (int) $user->books()->count(),
             ],
         ];

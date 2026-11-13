@@ -13,7 +13,6 @@ class Chapter extends Model
         'title',
         'content',
         'number',
-        'duration',
         'characters',
         'images',
         'comments_count',
@@ -24,6 +23,17 @@ class Chapter extends Model
     public function book()
     {
         return $this->belongsTo(Book::class);
+    }
+    public function pages()
+    {
+        return $this->hasMany(Page::class)->orderBy('number')->orderBy('id');
+    }
+    public function pageList()
+    {
+        return $this->hasMany(Page::class)
+            ->select('id', 'chapter_id', 'title', 'number')
+            ->orderBy('number')
+            ->orderBy('id');
     }
     public function likes()
     {

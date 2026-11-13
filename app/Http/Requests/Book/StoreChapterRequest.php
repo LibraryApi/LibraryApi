@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Book;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreChapterRequest extends FormRequest
 {
@@ -13,11 +14,20 @@ class StoreChapterRequest extends FormRequest
 
     public function rules()
     {
+        $bookId = $this->route('book');
+
         return [
-            'title' => 'string|min:5|max:50|unique:chapters,title,' . $this->route('chapter'), // Указываем игнорирование уникальности для текущей главы
-            'content' => 'string',
+            'title' => [
+                'required',
+                'string',
+                'min:5',
+                'max:50',
+                Rule::unique('chapters', 'title')->where(
+                    fn ($query) => $query->where('book_id', $bookId)
+                ),
+            ],
+            'content' => 'nullable|string',
             'number' => 'integer',
-            'duration' => 'nullable|string',
             'characters' => 'nullable|string',
             'images' => 'nullable|string',
         ];
@@ -26,8 +36,8 @@ class StoreChapterRequest extends FormRequest
     public function messages()
     {
         return [
-            'unique' => ':Attribute должно быть уникальным',
-
+            'title.required' => 'Укажите название главы.',
+            'title.unique' => 'Глава с таким названием уже есть в этой книге.',
             'title.max' => 'Максимальное количество символов для :attribute - 50',
             'title.min' => 'Минимальное количество символов для :attribute - 5',
 
@@ -35,7 +45,6 @@ class StoreChapterRequest extends FormRequest
 
             'number.integer' => 'Поле :attribute должно быть целым числом',
 
-            'duration.string' => 'Поле :attribute должно быть строкой',
             'characters.string' => 'Поле :attribute должно быть строкой',
             'images.string' => 'Поле :attribute должно быть строкой',
         ];

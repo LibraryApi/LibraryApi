@@ -61,6 +61,7 @@ class BookResource extends JsonResource
             'likes_count' => (int) ($this->likes_count ?? 0),
             'views_count' => (int) ($this->views_count ?? 0),
             'chapters_count' => $this->whenCounted('chapters'),
+            'pages_count' => $this->whenCounted('pages'),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'categories' => $this->whenLoaded('categories', function () {
@@ -77,7 +78,16 @@ class BookResource extends JsonResource
                         'id' => $chapter->id,
                         'title' => $chapter->title,
                         'number' => $chapter->number,
-                        'duration' => $chapter->duration,
+                        'pages_count' => (int) ($chapter->pages_count ?? 0),
+                        'page_list' => $chapter->relationLoaded('pageList')
+                            ? $chapter->pageList->map(function ($page) {
+                                return [
+                                    'id' => $page->id,
+                                    'title' => $page->title,
+                                    'number' => $page->number,
+                                ];
+                            })->values()->all()
+                            : [],
                         'is_read' => (bool) ($chapter->is_read ?? false),
                     ];
                 })->values()->all();

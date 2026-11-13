@@ -17,7 +17,6 @@ return new class extends Migration
             $table->string('title');
             $table->text('content');
             $table->integer('number')->nullable();
-            $table->string('duration')->nullable();
             $table->text('characters')->nullable();
             $table->text('images')->nullable();
             $table->integer('comments_count')->default(0);

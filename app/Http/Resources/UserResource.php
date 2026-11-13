@@ -16,17 +16,20 @@ class UserResource extends JsonResource
     {
         $viewer = $request->user('sanctum') ?? $request->user();
         $isOwnProfile = $viewer && (int) $viewer->id === (int) $this->id;
+        $postsEnabled = (bool) config('features.posts_enabled', false);
+        $canSeePrivate = $isOwnProfile
+            || ($viewer && method_exists($viewer, 'hasRole') && $viewer->hasRole('admin'));
 
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'email' => $this->email,
+            'email' => $canSeePrivate ? $this->email : null,
             'avatar' => $this->avatar_url,
             'banner_image' => $this->banner_url,
-            'birth_date' => $this->birth_date?->format('Y-m-d'),
+            'birth_date' => $canSeePrivate ? $this->birth_date?->format('Y-m-d') : null,
             'city' => $this->city,
             'telegram' => $this->telegram,
-            'phone' => $this->phone,
+            'phone' => $canSeePrivate ? $this->phone : null,
             'github' => $this->github,
             'vk' => $this->vk,
             'habr' => $this->habr,
@@ -40,8 +43,8 @@ class UserResource extends JsonResource
             'comments_count' => $this->whenCounted('comments'),
             'followers_count' => $this->whenCounted('followers'),
             'following_count' => $this->whenCounted('following'),
-            'posts' => PostResource::collection($this->whenLoaded('posts')),
-            'liked_posts' => PostResource::collection($this->whenLoaded('likedPosts')),
+            'posts' => $postsEnabled ? PostResource::collection($this->whenLoaded('posts')) : [],
+            'liked_posts' => $postsEnabled ? PostResource::collection($this->whenLoaded('likedPosts')) : [],
             'books' => $this->whenLoaded('books', fn () => $this->mapBooks($this->books)),
             'liked_books' => $this->whenLoaded('likedBooks', fn () => $this->mapBooks($this->likedBooks)),
             'followers' => $this->whenLoaded('followers', function () {

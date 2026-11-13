@@ -20,7 +20,6 @@ class ChapterFactory extends Factory
             'title' => $this->faker->sentence,
             'content' => $this->faker->paragraphs(5, true),
             'number' => $this->faker->numberBetween(1, 10),
-            'duration' => $this->faker->time('H:i:s'),
             'characters' => $this->faker->sentence,
             'images' => $this->faker->imageUrl(),
         ];
